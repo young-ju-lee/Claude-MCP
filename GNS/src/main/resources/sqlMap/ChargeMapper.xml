@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktds.egov.charge">
+<!-- GNS4.0 요금 테이블 변경 POR_FEE_NICS4 -->
+	<!-- select -->
+	<select id="goodsList" parameterType="com.ktds.egov.vo.charge.ChargeVo"
+		resultType="com.ktds.egov.vo.charge.ChargeVo">
+	 	<![CDATA[	 
+			SELECT SVC_TYPE FROM (
+				select decode(svc_type, '기본회선', '1',
+                				        '백본회선', '2',
+                       					'인터넷'  , '3',
+                       					'IoT', '4',
+                      					'CCTV전송', '5',
+                       					'6') NUM, SVC_TYPE
+				from ( SELECT DISTINCT SVC_TYPE FROM POR_FEE_NICS4 )
+       		)
+			ORDER BY NUM       
+        ]]>
+	</select>
+
+	<select id="speedList" parameterType="com.ktds.egov.vo.charge.ChargeVo"
+		resultType="com.ktds.egov.vo.charge.ChargeVo">
+	 	<![CDATA[	 
+        	 SELECT DISTINCT 
+        	 	SPEED
+       	 	FROM
+       	 		POR_FEE_NICS4
+       	 	WHERE SVC_TYPE = #{svc_type}
+       	 		ORDER BY SPEED_CD 
+        ]]>
+	</select>
+
+	<select id="stationList" parameterType="com.ktds.egov.vo.charge.ChargeVo"
+		resultType="com.ktds.egov.vo.charge.ChargeVo">
+	 	<![CDATA[	 
+        	 SELECT 
+        	 ADDR 
+        	 , ICIS_2
+       	 	FROM
+       	 		POR_BC_ACPT_OFC
+       	 	WHERE ADDR LIKE '%'||#{addr}||'%'
+	       ]]>
+	</select>
+
+	<select id="distanceSearch" parameterType="com.ktds.egov.vo.charge.ChargeVo"
+		resultType="com.ktds.egov.vo.charge.ChargeVo">
+				<![CDATA[	 
+        	 SELECT 
+        	 DIST_VALUE,
+        	 ]]>
+		<choose>
+			<when test="svc_type =='IP-VPN'">
+        	 		<![CDATA[
+        	 			CASE WHEN DIST_CODE = 'SN00' then DIST_CODE else 'SY00' END as DIST_CODE
+        	 		]]>
+			</when>
+			<otherwise>
+        	 		<![CDATA[
+        	 			DIST_CODE
+        	 		]]>
+			</otherwise>
+		</choose>
+        	 <![CDATA[
+        	 	FROM
+       	 		POR_UL_CO_RNG
+       	 		WHERE UCO= #{uco}
+       	 		AND LCO = #{lco}
+	       ]]>
+	</select>
+
+	<select id="calculation" parameterType="com.ktds.egov.vo.charge.ChargeVo"
+		resultType="com.ktds.egov.vo.charge.ChargeVo">
+	 	<![CDATA[	 
+        	SELECT 
+        	 distance,
+        	 to_char(FEE, '999G999G999G999') as fee 
+       	 	FROM
+       	 		POR_FEE_NICS4
+       	 	WHERE SVC_TYPE = #{svc_type}
+       	 	AND SPEED = #{speed}
+       	 	]]>
+		<if test="svc_type_ename != 'internet'">
+			AND DIST_CODE = #{dist_code}
+		</if>
+		<if test="svc_type_ename == 'CCTV'">
+			AND DISTANCE = #{distance}
+			<!-- AND DISTANCE_CD = #{distance_cd} -->
+		</if>
+		
+	</select>
+
+	<select id="feebasisMenu" parameterType="com.ktds.egov.vo.charge.ChargeVo"
+		resultType="com.ktds.egov.vo.charge.ChargeVo">
+	 	<![CDATA[	 
+        select 
+			distinct decode(distance_cd, '0', '시군구청용', '1', '어린이보호용', '2', '일반용') as fee_basis
+			, distance_cd
+		from POR_FEE_NICS4
+		where svc_type=#{svc_type}
+			order by distance_cd
+
+       	 	]]>
+	</select>
+
+	<select id="distanceMenu" parameterType="com.ktds.egov.vo.charge.ChargeVo"
+		resultType="com.ktds.egov.vo.charge.ChargeVo">
+	 	<![CDATA[	 
+        	select
+        		distinct distance 
+			from POR_FEE_NICS4
+			where svc_type=#{svc_type}
+			order by distance
+       	 	]]>
+
+	</select>
+
+	<select id="contractPeriodMenu" parameterType="com.ktds.egov.vo.charge.ChargeVo"
+		resultType="com.ktds.egov.vo.charge.ChargeVo">
+	 	<![CDATA[	 
+        	select 
+        		distinct dist_code				
+			from POR_FEE_NICS4
+			where svc_type=#{svc_type}
+			order by dist_code
+       	 	]]>
+	</select>
+
+	<select id="speedMenu" parameterType="com.ktds.egov.vo.charge.ChargeVo"
+		resultType="com.ktds.egov.vo.charge.ChargeVo">
+	 	<![CDATA[	 
+        	select 
+        		distinct speed
+			from POR_FEE_NICS4
+			where svc_type=#{svc_type}
+			order by speed_cd
+       	 	]]>
+	</select>
+
+	<select id="areaList" parameterType="com.ktds.egov.vo.charge.ChargeVo"
+		resultType="com.ktds.egov.vo.charge.ChargeVo">
+	 	<![CDATA[	 
+        	 SELECT DISTINCT 
+        	 	TOP_NAT
+       	 	FROM POR_NAT_DIST
+       	 		ORDER BY TOP_NAT 
+        ]]>
+	</select>
+	<select id="areaDist" parameterType="com.ktds.egov.vo.charge.ChargeVo"
+		resultType="com.ktds.egov.vo.charge.ChargeVo">
+	 	<![CDATA[	 
+			SELECT decode(dist_val,'시내','0',dist_val) dist_val FROM POR_NAT_DIST
+			where top_nat = #{top_nat}
+			and   botton_nat =  #{botton_nat}  ;
+        ]]>
+	</select>
+</mapper>

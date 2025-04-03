@@ -1,0 +1,741 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktds.egov.member">
+<!-- 2017.12.22  보안성검토 회원 정보 가지고 올 때 비밀번호 업데이트 컬럼 가지고 오기 -->
+	<select id="selectUserId" parameterType="com.ktds.egov.vo.member.MemberVo"
+		resultType="com.ktds.egov.vo.member.MemberVo">
+	 	<![CDATA[
+            SELECT user_id, user_auth_id, ll_id, user_nm, init_yn , to_char(pw_updt_date, 'YYYYMMDD') as pw_updt_date
+              FROM POR_USER
+             WHERE user_id = #{user_id}
+             AND   user_pw = encode(digest( #{user_pw} ,'sha256'),'hex')
+             AND   user_stat = '00'
+        ]]>
+	</select>
+	
+	<!-- 2018.07.20 암호화로직 변경 기존사용자 업데이트 쿼리추가 -->
+	<update id="updateSaltPw" parameterType="com.ktds.egov.vo.member.MemberVo">
+	    UPDATE POR_USER
+	    SET	salt = #{salt},
+	    	user_pw = encode(digest( #{user_pw} ,'sha256'),'hex')
+	    WHERE user_id = #{user_id}
+	</update>
+	
+	<!-- 로그인ID 존재유무 확인 -->
+	<select id="selectCheckUser" parameterType="com.ktds.egov.vo.member.MemberVo"
+		resultType="com.ktds.egov.vo.member.MemberVo">
+	 	<![CDATA[
+            SELECT user_id, login_fail_time, login_fail_cnt
+              FROM POR_USER
+             WHERE user_id = #{user_id}
+        ]]>
+	</select>
+	
+	<!-- 2018.07.20 salt 반영 salt 값 확인-->
+	<select id="selectCheckSalt" parameterType="com.ktds.egov.vo.member.MemberVo"
+		resultType="com.ktds.egov.vo.member.MemberVo">
+	 	<![CDATA[
+            SELECT SALT
+              FROM POR_USER
+             WHERE USER_ID = #{user_id}
+             AND SALT IS NOT NULL            
+        ]]>
+	</select>
+	
+	<!-- 2019.12.06 RSA 공개키 가지고 오기-->
+	<select id="selectRsaOpenKey" parameterType="com.ktds.egov.vo.member.MemberVo"
+		resultType="com.ktds.egov.vo.member.MemberVo">
+	 	<![CDATA[
+            SELECT cd_val as rsaOpenKey
+              FROM code_info
+             WHERE cd_id='spublickey'
+                 
+        ]]>
+	</select>
+	
+		<!-- 2019.12.06 RSA 비공개키 가지고 오기-->
+	<select id="selectRsaSecretKey" parameterType="com.ktds.egov.vo.member.MemberVo"
+		resultType="com.ktds.egov.vo.member.MemberVo">
+	 	<![CDATA[
+            SELECT cd_val as rsaSecretKey
+              FROM code_info
+             WHERE cd_id='sprivatekey'
+                 
+        ]]>
+	</select>
+	
+	<!-- 2019.04.26 구조적보안진단 중복로그인 체크 추가-->
+	<select id="selectSessionCheck" parameterType="com.ktds.egov.vo.member.MemberVo"
+		resultType="com.ktds.egov.vo.member.MemberVo">
+	 	<![CDATA[
+            SELECT user_id
+              FROM por_login_check
+             WHERE USER_ID = #{user_id}                      
+        ]]>
+	</select>
+	
+
+	<!-- 로그인시도 상태 업데이트 -->
+	<update id="updateUserLoginState" parameterType="com.ktds.egov.vo.member.MemberVo">
+	    UPDATE POR_USER
+	    SET	login_fail_time = #{login_fail_time},
+	    	login_fail_cnt = #{login_fail_cnt},
+	    	login_fail_ip  =#{ip}
+	    WHERE user_id = #{user_id}
+	</update>
+	
+    <!-- Select User_id Data -->
+	<select id="selectUserIdCheck" parameterType="com.ktds.egov.vo.member.MemberVo"
+		resultType="com.ktds.egov.vo.member.MemberVo">
+	 	<![CDATA[
+            SELECT user_id
+              FROM POR_USER
+             WHERE user_id = #{user_id}
+        ]]>
+	</select>
+   
+	<select id="selectMemberView" parameterType="com.ktds.egov.vo.member.MemberVo"
+		resultType="com.ktds.egov.vo.member.MemberVo">
+	 	<![CDATA[
+			SELECT	user_id, user_nm, user_pw, user_mail,  
+			        tel1, tel2,tel3, mobile1, mobile2, mobile3,
+              		ll_id, user_auth_id, user_stat
+			   FROM por_user
+			  WHERE user_id = #{user_id}
+        ]]>
+	</select>
+	<!-- 2019.11.15 사용자 메일인증 코드 확인 -->
+	<select id="selectMailCodeCheck" parameterType="com.ktds.egov.vo.member.MemberVo"
+		resultType="com.ktds.egov.vo.member.MemberVo">
+	 	<![CDATA[
+			SELECT	user_id
+			   FROM por_user
+			  WHERE user_id = #{user_id}
+			  AND mail_code= #{mail_code}
+        ]]>
+	</select>
+	<!-- 2019.11.15 사용자 메일정보 가지고 오기 -->
+	<select id="selectMailCheck" parameterType="com.ktds.egov.vo.member.MemberVo"
+		resultType="com.ktds.egov.vo.member.MemberVo">
+	 	<![CDATA[
+			SELECT	user_id,user_nm,user_mail
+			   FROM por_user
+			  WHERE user_id = #{user_id}			  
+        ]]>
+	</select>
+	<!-- 2019.11.15 메일발송결과저장 -->
+	<!-- 2019.12.06 로그센터연동 메일발송 추가 -->
+	<insert id="InsertMailresult" parameterType="com.ktds.egov.vo.member.MemberVo">
+	 	<![CDATA[
+           INSERT INTO por_mail_approval
+            (user_ip,user_id,user_nm,user_mail,send_date,send)
+		   VALUES 
+		    (#{ip},#{user_id}, #{user_nm},#{user_mail},sysdate,#{mail_flag});
+		    
+		     INSERT INTO TB_PRIVACY_INFO
+        	(
+        		LOGTIM
+				, SEQ
+				, SYS_ID
+				, USER_ID
+				, USER_NM
+				, ORG_NM
+				, USER_IP
+				, CUST_ID
+				, DEAL_DTM2
+				, RTRV_MENU
+				, RTRV_TYPE_NM
+				, MULTI_LOG_TYPE
+				, MULTI_LOG_PARAM
+				, RTRV_CAUS_NM
+				
+			) values
+			(sysdate(),(select count(seq)+1 from tb_privacy_info), 'GNS_POR','admin'
+			,'관리자','', #{ip},#{user_id}
+			,(select login_date from tb_login_info where id=#{user_id} and gubun='GNS_POR'  and login_date is not null order by login_date desc limit 1)
+			, '메일발송', '회원조회','단건','', '메일발송 시 사용자 이메일 조회')
+		    
+        ]]>
+	</insert>
+	
+	<!-- 2019.11.15 보낼 메일정보 가지고옴 -->
+	<select id="selectMailInfo" parameterType="com.ktds.egov.vo.member.MemberVo"
+		resultType="com.ktds.egov.vo.member.MemberVo">
+	 	<![CDATA[
+		SELECT host, port, admin_mail, subject, content
+		FROM por_mail_content
+		WHERE mail_cd = '03'
+        ]]>
+	</select>
+	<!-- 2019.11.15 1분에 같은 아이피 메일건수 체크 -->
+	<select id="sendMailInfo" parameterType="com.ktds.egov.vo.member.MemberVo"
+		resultType="com.ktds.egov.vo.member.MemberVo">
+	 	<![CDATA[
+	    SELECT user_id, user_nm, user_mail, send_date, send, user_ip
+	    FROM egov.por_mail_approval where send_date > (select TO_CHAR(SYSDATE-1/24/60,'YYYY-MM-DD HH24:MI:SS') FROM DUAL) 
+	    AND user_ip=#{ip}
+        ]]>
+	</select>
+	<!-- 2019.04.26 중복로그인 체크 -->
+	<select id="selectLoginCheck" parameterType="com.ktds.egov.vo.member.MemberVo"
+		resultType="com.ktds.egov.vo.member.MemberVo">
+	 	<![CDATA[
+			SELECT	user_id , session_id
+			   FROM por_login_check
+			  WHERE user_id = #{user_id}
+			  AND  to_number(to_char(login_date,'YYYYMMDDHH24MISS')) > to_number(to_char((select sysdate - INTERVAL '30' MINUTE FROM DUAL),'YYYYMMDDHH24MISS'))
+        ]]>
+	</select>
+	 <!-- 2019.04.26 구조적보안진단 SQL인젝션 수정 -->
+	<select id="selectMemberList" parameterType="com.ktds.egov.vo.member.MemberVo"
+		resultType="com.ktds.egov.vo.member.MemberVo">
+	 	<![CDATA[
+			SELECT  rownum as seq ,  a.user_id, a.user_nm, a.inst_date,
+			a.user_before, a.user_auth, a.login_fail_time, a.login_fail_cnt, 
+			a.unlock_yn,a.mail_yn, b.row_cnt
+			FROM 
+			(SELECT  user_id, user_nm, to_char(insrt_date, 'YYYY-MM-DD') as inst_date,
+				 decode(user_auth_id, '10', '대기', '승인') user_before, 
+				 decode(user_auth_id, '10', '일반회원', 
+						      '20', '전용회원',
+						      '30', '상담관리자',
+						      '40', '전체관리자') user_auth ,
+				login_fail_time, login_fail_cnt, '' as unlock_yn, mail_yn
+				    FROM por_user
+		]]>
+		<choose>
+			<when test="p_search_group != 'member_id'">
+					where user_nm like '%' || #{p_search_value} || '%'
+			</when>
+			<otherwise>
+					where user_id like '%' || #{p_search_value} || '%'
+			</otherwise>
+		</choose>
+		<![CDATA[	    
+				    ORDER BY inst_date DESC
+				    ) a,
+				 (SELECT COUNT(user_id) row_cnt
+				    FROM por_user
+		]]>
+		<choose>
+			<when test="p_search_group != 'member_id'">
+				<![CDATA[
+					where user_nm like '%' || #{p_search_value} || '%'
+				]]>
+			</when>
+			<otherwise>
+				<![CDATA[
+					where user_id like '%' || #{p_search_value} || '%'
+				]]>
+			</otherwise>
+		</choose>
+		<![CDATA[
+				    ) b			
+			LIMIT #{limit} OFFSET #{offSet}
+        ]]>
+	</select>	
+	
+	<!-- insertData -->
+	<insert id="insertLogin" parameterType="com.ktds.egov.vo.member.MemberVo">
+	 	<![CDATA[
+           INSERT INTO POR_LOGIN
+            (user_id, login_date )
+		   VALUES 
+		    (#{user_id}, sysdate);
+		    
+		   INSERT INTO TB_LOGIN_INFO
+		   	(id, ip, gubun, login_date)
+		   VALUES
+		   	(#{user_id}, #{ip}, #{siteGubun}, sysdate())
+        ]]>
+	</insert>
+		<!-- 2019.04.26 중복로그인 확인을 위한 INSERT -->
+	<insert id="insertLoginCheck" parameterType="com.ktds.egov.vo.member.MemberVo">
+	 	<![CDATA[
+           INSERT INTO POR_LOGIN_CHECK
+            (user_id,session_id, login_date )
+		   VALUES 
+		    (#{user_id},#{session_id}, sysdate);
+		    
+        ]]>
+	</insert>
+	
+	<!-- 2019.04.26 중복로그인 로그아웃시에 Delete -->
+	<insert id="deleteLoginCheck" parameterType="com.ktds.egov.vo.member.MemberVo">
+	 	<![CDATA[
+           DELETE POR_LOGIN_CHECK WHERE USER_ID=#{user_id}
+        ]]>
+	</insert>
+	
+	
+	
+	<!-- 2018.01.19  보안성검토 로그저장-->
+	<insert id="insertLogout" parameterType="com.ktds.egov.vo.member.MemberVo">
+	 	<![CDATA[
+          
+		   INSERT INTO TB_LOGIN_INFO
+		   	(id, ip, gubun, logout_date)
+		   VALUES
+		   	(#{user_id}, #{ip}, #{siteGubun}, sysdate())
+        ]]>
+	</insert>
+	<!-- 2018.01.19  보안성검토 로그저장-->
+	<insert id="insertLogfail" parameterType="com.ktds.egov.vo.member.MemberVo">
+	 	<![CDATA[
+          
+		   INSERT INTO TB_LOGIN_INFO
+		   	(id, ip, gubun, logfail_date)
+		   VALUES
+		   	(#{user_id}, #{ip}, #{siteGubun}, sysdate())
+        ]]>
+	</insert>
+	
+			
+	<!-- 2018.03.23 보안성검토 로그센터 연동 수정 -->
+	<insert id="insertPrivacy" parameterType="com.ktds.egov.vo.member.MemberVo">
+	 	<![CDATA[
+           INSERT INTO TB_PRIVACY_INFO
+        	(
+        		LOGTIM
+				, SEQ
+				, SYS_ID
+				, USER_ID
+				, USER_NM
+				, ORG_NM
+				, USER_IP
+				, CUST_ID
+				, DEAL_DTM2
+				, RTRV_MENU
+				, RTRV_TYPE_NM
+				, MULTI_LOG_TYPE
+				, MULTI_LOG_PARAM
+				, RTRV_CAUS_NM
+				
+			) values
+			(sysdate(),(select count(seq)+1 from tb_privacy_info), 'GNS_POR',#{user_id1}
+			,(select user_nm from por_user where user_id=#{user_id2}),'', #{ip},#{user_id}
+			,(select login_date from tb_login_info where id=#{user_id3} and gubun='GNS_POR'  and login_date is not null order by login_date desc limit 1)
+			, #{menu_name}, '회원조회',#{multi_log_type},#{multi_log_param}, '회원정보 조회 및 권한확인')
+		  
+        ]]>
+	</insert>
+	
+	
+	<!-- 2018.01.19  보안성검토 로그저장-->
+		<insert id="insertLogauth" parameterType="com.ktds.egov.vo.member.MemberVo">
+	 	<![CDATA[
+          
+		   INSERT INTO TB_AUTH_INFO
+		   	(user_id, user_approval_id, user_auth_id, gubun, event_code, auth_date)
+		   VALUES
+		   	(#{user_id}, #{user_approval_id}, #{user_auth_id}, #{siteGubun},#{event_code}, sysdate())
+        ]]>
+	</insert>
+	
+	<!-- 2017.12.22  보안성검토 회원등록 시에 비밀번호 업데이트 컬럼 추가 -->
+	<!-- 2018.07.20  암호화로직 변경 salt 추가 -->
+	<!-- 2019.10.25  회원가입 시에 메일잠금 기본값 N으로 추가 -->
+	<!-- insertData -->
+	<insert id="insertUser" parameterType="com.ktds.egov.vo.member.MemberVo">
+	 	<![CDATA[
+           INSERT INTO POR_USER
+            (user_id, user_nm, user_pw, user_mail,  tel1, tel2,tel3, mobile1, mobile2, mobile3,
+              ll_id, user_auth_id, user_stat, insrt_date, updt_date, login_fail_time, login_fail_cnt , pw_updt_date ,ucheck1, ucheck2, ucheck3
+              ,salt,mail_yn
+            )
+		     VALUES 
+		     (#{user_id},#{user_nm},encode(digest( #{user_pw} ,'sha256'),'hex'),#{user_mail},#{tel1},#{tel2},#{tel3},#{mobile1},#{mobile2},#{mobile3},
+		      #{ll_id}, #{user_auth_id}, #{user_stat}, sysdate, sysdate, '0', 0 , sysdate, #{ucheck1}, #{ucheck2}, #{ucheck3}, #{salt},'N'
+		     )
+        ]]>
+	</insert>
+	<!-- 2017.12.22  보안성검토 개인정보 변경 했을때 비밀번호 업데이트 컬럼 업데이트-->
+	<!-- 2018.07.20  암호화로직 변경 salt 추가 MY INFO 개인정보 수정-->
+		<!-- updateData -->
+	<update id="updateUser" parameterType="com.ktds.egov.vo.member.MemberVo">
+	 	<![CDATA[
+           UPDATE POR_USER
+           SET
+           		user_nm = #{user_nm}, 
+           		user_pw =  encode(digest( #{user_pw} ,'sha256'),'hex'),
+           		init_yn = 'N' ,
+           		pw_updt_date = sysdate,
+           		salt = #{salt},
+          ]]>		
+          		<if test="user_mail != null and user_mail != ''">
+	          		<![CDATA[
+	 					user_mail = #{user_mail},
+	 				]]>
+ 				</if>
+ 				<if test="(tel1 != null and tel1 != '') and (tel2 != null and tel2 != '') and (tel3 != null and tel3 != '') ">
+ 					<![CDATA[
+		 				tel1    = #{tel1},
+		           		tel2    = #{tel2},
+		           		tel3    = #{tel3},
+	           		]]>
+           		</if>
+           		<if test="(mobile1 != null and mobile1 != '') and (mobile2 != null and mobile2 != '') and (mobile3 != null and mobile3 != '') ">
+	           		<![CDATA[
+		           		mobile1 = #{mobile1},
+		           		mobile2 = #{mobile2},
+		           		mobile3 = #{mobile3},
+		           	]]>
+ 				</if>
+ 				<if test="ll_id != null and ll_id != ''">		
+ 					ll_id   = #{ll_id},  
+ 				</if>
+ 				<if test="user_auth_id != null and user_auth_id != ''">		
+ 					user_auth_id = #{user_auth_id}, 
+ 				</if>
+           		updt_date = sysdate
+           WHERE user_id = #{user_id}		
+	</update>
+	
+	
+		<!-- updateData -->
+	<update id="updateUser2" parameterType="com.ktds.egov.vo.member.MemberVo">
+	 	<![CDATA[
+           UPDATE POR_USER
+           SET
+           	user_auth_id = #{user_auth_id},
+           	updt_date = sysdate
+          ]]>				
+           WHERE user_id = #{user_id}		
+	</update>
+	<!-- 2017.12.22  보안성검토 다음에 변경 했을때 비밀번호 업데이트 컬럼 업데이트-->
+			<!-- updatePass -->
+	<update id="update_Pass" parameterType="com.ktds.egov.vo.member.MemberVo">
+	 	<![CDATA[
+           UPDATE POR_USER
+           SET           	
+           	pw_updt_date = sysdate
+          ]]>				
+           WHERE user_id = #{user_id}		
+	</update>
+	
+	<!-- 2019.10.25 메일인증 코드 업데이트 -->
+	<update id="update_mail_code" parameterType="com.ktds.egov.vo.member.MemberVo">
+	 	<![CDATA[
+           UPDATE POR_USER
+           SET           	
+           	mail_code = #{mail_code}
+         			
+           WHERE user_id = #{user_id}		
+            ]]>	
+	</update>
+	
+	<!-- 2018.07.20  암호화로직 변경 salt 추가 관리자 사용자 비번 초기화 시 -->
+	<!-- 비밀번호 초기화 -->
+	<update id="update_pw" parameterType="com.ktds.egov.vo.member.MemberVo">
+	 	<![CDATA[
+           UPDATE POR_USER
+           SET  user_pw =  encode(digest( #{user_pw} ,'sha256'),'hex'),
+                salt = #{salt},
+           		updt_date = sysdate ,
+           		pw_updt_date = sysdate,
+           		init_yn = 'Y'
+           WHERE user_id = #{user_id}	
+         ]]>	
+	</update>
+	
+	<!-- 계정잠김 해제 -->
+	<update id="unlock_id" parameterType="com.ktds.egov.vo.member.MemberVo">
+	 	<![CDATA[
+           UPDATE POR_USER
+           SET  login_fail_time = #{login_fail_time}, 
+           		login_fail_cnt = #{login_fail_cnt},
+           		updt_date = sysdate
+           WHERE user_id = #{user_id}	
+         ]]>	
+	</update>
+	<!--2019.11.15 메일 계정 잠금 확인 -->
+		<select id="select_mailyn" parameterType="com.ktds.egov.vo.member.MemberVo"
+		resultType="com.ktds.egov.vo.member.MemberVo">
+	 	<![CDATA[
+           SELECT mail_yn FROM POR_USER           
+           WHERE user_id = #{user_id}	       
+         ]]>	
+	</select>
+	<!--2019.11.15 사용자쿠키확인 -->
+		<select id="select_cokiyn" parameterType="com.ktds.egov.vo.member.MemberVo"
+		resultType="com.ktds.egov.vo.member.MemberVo">
+	 	<![CDATA[
+           SELECT user_id FROM user_coki_info           
+           WHERE user_id=#{user_id}
+            AND coki_keyEn = #{cokiKeyEn}	       
+         ]]>	
+	</select>
+	<!-- 2019.11.15 계정 메일발송 상태변경 -->
+	<update id="maillock_id" parameterType="com.ktds.egov.vo.member.MemberVo">
+	 	<![CDATA[
+           UPDATE POR_USER
+           SET  mail_yn = #{mail_yn}
+           WHERE user_id = #{user_id}	
+         ]]>	
+	</update>
+	<!-- 2019.11.15 전체계정 메일발송 상태변경 -->
+	<update id="maillock_all" parameterType="com.ktds.egov.vo.member.MemberVo">
+	 	<![CDATA[
+           UPDATE POR_USER
+           SET  mail_yn = #{mail_yn}
+           WHERE 1=1	
+         ]]>	
+	</update>
+	<!-- 2017.12.22  보안성검토 비번 수정 시에 비밀번호 업데이트 컬럼 수정 -->
+	<!-- 2018.07.20 아이디 비밀번호로 패스워드 찾기 후 비번 신규생성  salt추가 -->
+	<!-- 비밀번호 업데이트 -->
+	<update id="update_pw2" parameterType="com.ktds.egov.vo.member.MemberVo">
+	 	<![CDATA[
+           UPDATE POR_USER
+           SET  user_pw = encode(digest( #{user_pw2} ,'sha256'),'hex') ,  
+                salt = #{salt}, 
+           		updt_date = sysdate ,
+           		pw_updt_date = sysdate ,
+           		init_yn = 'Y'
+           WHERE user_id = #{user_id}	
+         ]]>	
+	</update>
+	
+		<!-- 2017.12.22  보안성검토 비번 수정 시에 비밀번호 업데이트 컬럼 수정 -->
+		<!-- 2018.07.20  3개월 지난 패스워드 변경 시에 salt 추가 변경 -->
+	<!-- 비밀번호 업데이트 -->
+	<update id="update_pw3" parameterType="com.ktds.egov.vo.member.MemberVo">
+	 	<![CDATA[
+           UPDATE POR_USER
+           SET  user_pw = encode(digest( #{new_pwd} ,'sha256'),'hex') ,   
+                salt    = #{salt},
+           		updt_date = sysdate ,
+           		pw_updt_date = sysdate,
+           		init_yn = 'N'
+           WHERE user_id = #{user_id}	
+         ]]>	
+	</update>
+	<!-- 2017.12.22  보안성검토 회원탈퇴 수정 -->
+	<!-- 사용자 삭제 -->
+	<delete id="delete_id" parameterType="com.ktds.egov.vo.member.MemberVo">
+	 	<![CDATA[
+           DELETE POR_USER           
+           WHERE user_id = #{user_id}	
+            and  user_pw = encode(digest( #{old_pwd} ,'sha256'),'hex') 
+         ]]>	
+	</delete>
+	<!-- 2022.06.24  사용자 삭제시 메일 인증 정보 삭제 -->
+	<!-- 메일 인증 정보 삭제 -->
+	<delete id="delete_mail_approval" parameterType="com.ktds.egov.vo.member.MemberVo">
+	 	<![CDATA[
+           DELETE por_mail_approval WHERE user_id = #{user_id}
+         ]]>	
+	</delete>
+	<!-- 2019.04.26 MY INFO 비밀번호 체크 -->
+	<select id="select_id" parameterType="com.ktds.egov.vo.member.MemberVo"
+		resultType="com.ktds.egov.vo.member.MemberVo">
+	 	<![CDATA[
+           SELECT user_id FROM POR_USER           
+           WHERE user_id = #{user_id}	
+            and  user_pw = encode(digest( #{old_pwd} ,'sha256'),'hex') 
+         ]]>	
+	</select>
+	
+	<!-- 2017.01.19  보안성검토  관리자 사용자 삭제 분기처리(비번 사용안함) -->
+	<delete id="delete_id2" parameterType="com.ktds.egov.vo.member.MemberVo">
+	 	<![CDATA[
+           DELETE POR_USER           
+           WHERE user_id = #{user_id}	            
+         ]]>	
+	</delete>
+			<!-- 메뉴접속건수  저장 -->	
+	<update id="updateStat" parameterType="com.ktds.egov.vo.member.StatVo">
+	 	<![CDATA[
+           update por_stat
+           set
+                menu_cnt = nvl(menu_cnt,0) + 1 
+          where menu_id = #{memu_id}     		             
+        ]]>
+	</update>
+					   
+	<select id="selectStat" parameterType="com.ktds.egov.vo.member.MenuStateVo" resultType="com.ktds.egov.vo.member.StatVo">
+			select rownum seq, menu_lvl1_nm, menu_lvl2_nm, menu_lvl3_nm, menu_cnt as menu_count, use_yn
+			from 
+			(	SELECT	a.menu_lvl1_nm, a.menu_lvl2_nm, a.menu_lvl3_nm, 
+			            to_char(nvl(b.menu_cnt,0)) as menu_cnt, 
+			            a.use_yn, 
+			            a.menu_id 
+				FROM por_stat a, 
+				(
+					select count(menu_id) as menu_cnt, menu_id
+					from   por_stat_log
+					where  1 = 1 		
+					<if test="search_type == 'D'.toString()"> 				    
+				    and  to_char(in_date, 'yyyy-MM-dd') between #{search_from} and #{search_to}
+					</if>
+											
+					<if test="search_id != null and search_id != ''">					
+					and    user_id  = #{search_id}
+					</if>					
+					group by menu_id
+				) b
+				where a.menu_id = b.menu_id(+)				    
+			    and   a.use_yn = 'Y' and a.menu_id not in('201040','204030','204040','204050')
+			 	order by a.menu_id
+			)     			
+	</select>
+	
+	<select id="SelectYearList" resultType="com.ktds.egov.vo.member.LoginVo">
+		<![CDATA[
+		select search_id, login_cnt, tot_cnt,
+		       case
+		       when tot_cnt = 0 then 0
+		       else round((login_cnt*100)/tot_cnt, 0)  
+		       end login_psen		       
+		from (select kkk search_id, nvl(login_cnt, 0) login_cnt, tot_cnt
+			 from   (select to_char(login_date, 'YYYY') kkk, count(user_id) login_cnt 
+			 		 from por_login			 		 
+					 group by to_char(login_date, 'YYYY')) a,
+					(SELECT count(*) tot_cnt
+					 FROM por_login					 
+					 ) b
+			)		
+		order by search_id
+       ]]>
+	</select>
+			<select id="SelectMonthList" resultType="com.ktds.egov.vo.member.LoginVo">
+	 	<![CDATA[
+			select search_id, login_cnt, tot_cnt,
+			       case
+			       when tot_cnt = 0 then 0
+			       else round((login_cnt*100)/tot_cnt, 0)  
+			       end login_psen			      
+			from (select copy_no search_id, nvl(login_cnt, 0) login_cnt
+				from   (select to_char(login_date, 'MM') kkk, count(user_id) login_cnt 
+						from por_login 
+						where to_char(login_date,'yyyy') between substr(#{search_from},1,4) and substr(#{search_to},1,4)
+						group by to_char(login_date, 'MM')) a, 
+						por_copy_t t
+						where  t.no < 13
+						AND    t.no > 0
+						and    a.kkk(+) = t.copy_no) a,
+						(SELECT count(*) tot_cnt
+						FROM por_login
+						where to_char(login_date,'yyyy') between substr(#{search_from},1,4) and substr(#{search_to},1,4)
+						) b
+			order by search_id
+						        ]]>
+	</select>
+	<select id="SelectDayList" resultType="com.ktds.egov.vo.member.LoginVo">
+	 		<![CDATA[
+			select search_id, login_cnt, tot_cnt, 
+			       case 
+			       when tot_cnt = 0 then 0
+			       else round((login_cnt*100)/tot_cnt, 0)  
+			       end login_psen
+			from (select copy_no search_id, nvl(login_cnt, 0) login_cnt
+				from   (select to_char(login_date, 'DD') kkk, count(user_id) login_cnt 
+						from por_login 
+						where to_char(login_date,'yyyy-MM') between substr(#{search_from},1,7) and substr(#{search_to},1,7)		
+						group by to_char(login_date, 'DD'))a, 
+						por_copy_t t
+						where  t.no < 32
+						AND    t.no > 0
+						and    a.kkk(+) = t.copy_no) a,
+						(SELECT count(*) tot_cnt
+						FROM por_login
+						where to_char(login_date,'yyyy-MM') between substr(#{search_from},1,7) and substr(#{search_to},1,7)		
+						) b
+			order by search_id
+        ]]>
+	</select>
+	<select id="SelectHourList" resultType="com.ktds.egov.vo.member.LoginVo">
+	 	<![CDATA[
+			select search_id, login_cnt, tot_cnt,
+			       case 
+			       when tot_cnt = 0 then 0
+			       else 
+			         round((login_cnt*100)/tot_cnt, 0)  
+			       end login_psen
+			from (select copy_no search_id, nvl(login_cnt, 0) login_cnt
+				from   (select to_char(login_date, 'hh24') kkk, count(user_id) login_cnt 
+						from por_login 
+					    where to_char(login_date,'yyyy-MM-dd') between #{search_from} and #{search_to}				
+						group by to_char(login_date, 'hh24'))a, 
+						por_copy_t t
+						where  t.no < 24
+						and    a.kkk(+) = t.copy_no) a,
+				 		(SELECT count(*) tot_cnt
+						FROM por_login
+						where to_char(login_date,'yyyy-MM-dd') between #{search_from} and #{search_to}		
+						) b
+			order by search_id
+        ]]>
+	</select>
+	
+	<!-- 관리자화면 >> 회원정보 >> 가입회선내역 list -->	
+	<select id="selectMemberInfo" resultType="com.ktds.egov.vo.member.MemberVo">	 
+	    <![CDATA[				
+		select  a.cust_name, 
+		        a.svc_no as llnum,         
+		        a.app_nat_name, 		        
+		        a.reqer_name,
+		        a.cntc_tel_no,		      	       
+		        a.sa_id ,
+		        b.logic_port_id
+		from    tb_customerorder a, 
+		       (select  nescode || '.' || lgipportdescription as logic_port_id, 
+		                nvl(llnum,'*') as llnum_2
+				from    tb_egov_ne_nic_group
+				group by nescode, lgipportdescription, llnum) b	
+		where   1 = 1  
+		and     a.svc_no = b.llnum_2(+)
+		and     a.sa_cd ='0730'
+		and     a.cust_id =  
+		       (select  max(cust_id) 
+		        from  tb_customerorder
+		        where  svc_no = #{ll_id}) 
+		]]>    
+	</select>
+	
+	<!-- 팝업창관리 내역 저장 -->	
+	<insert id="insertMenuState" parameterType="com.ktds.egov.vo.member.MenuStateVo">
+	 	<![CDATA[
+           insert into por_stat_log(user_id, menu_id, in_date)
+                         values(#{user_id}, #{menu_id}, sysdate)          		             
+        ]]>
+	</insert>	
+	<!-- 2019.11.15 쿠키정보 DB저장 -->
+	<insert id="insertcoki" parameterType="com.ktds.egov.vo.member.MemberVo">
+	 	<![CDATA[
+           insert into user_coki_info(coki_seq,user_id, user_agent, coki_salt,coki_Key,coki_saltEn,coki_KeyEn,reg_date)
+                         values((select count(coki_seq)+1 from user_coki_info),#{user_id}, #{userAgent},#{coki_salt},#{cokiKey},#{coki_saltEn},#{cokiKeyEn}, sysdate)          		             
+        ]]>
+	</insert>	
+	<!-- 해당 user_id , email 값의 user_id 값 가져오기 -->	
+	<select id="selectUserID1" parameterType="com.ktds.egov.vo.member.MemberVo" resultType="com.ktds.egov.vo.member.MemberVo">
+	 	<![CDATA[
+	 	   select *
+	 	   from   por_user
+	 	   where  user_nm= #{user_nm}
+	 	   and    user_mail = #{user_mail}          		             
+        ]]>
+	</select>	
+	
+	<!-- 해당 user_nm , email 값의 user_id 값 가져오기 -->	
+	<select id="selectUserID2" parameterType="com.ktds.egov.vo.member.MemberVo" resultType="com.ktds.egov.vo.member.MemberVo">
+	 	<![CDATA[
+	 	   select *
+	 	   from   por_user
+	 	   where  user_id = #{user_id}
+	 	   and    user_mail = #{user_mail}          		             
+        ]]>
+	</select>	
+	
+	<!-- 해당 id, 비밀번호에 데이터 존재 확인 -->	
+	<select id="check_pw" parameterType="com.ktds.egov.vo.member.MemberVo" resultType="com.ktds.egov.vo.member.MemberVo">
+	 	<![CDATA[
+	 	   select user_id
+	 	   from   por_user
+	 	   where  user_id = #{user_id}
+	 	   and    user_pw = encode(digest( #{old_pwd} ,'sha256'),'hex')    	 	   	 	      		             
+        ]]>
+	</select>
+
+	
+</mapper>

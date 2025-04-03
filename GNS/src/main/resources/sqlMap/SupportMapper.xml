@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktds.egov.support">
+	<select id="selectNoticeList" parameterType="com.ktds.egov.vo.support.NoticeVo"
+		resultType="com.ktds.egov.vo.support.NoticeVo">
+	 	<![CDATA[
+			SELECT notice_id, notice_title, to_char(notice_date, 'yyyy-MM-dd')as notice_date,
+    			   case 
+					 when notice_date > sysdate -7  then 'y'
+				   else 'n'
+				   end as new_yn
+            FROM por_notice		
+            order by notice_id desc	      		
+			LIMIT 4
+        ]]>
+	</select>
+     <!-- 2019.04.26 구조적보안진단 SQL인젝션 수정 -->
+	<select id="selectNotice" parameterType="com.ktds.egov.vo.support.NoticeVo"
+		resultType="com.ktds.egov.vo.support.NoticeVo">
+	 	<![CDATA[
+			SELECT   rownum as seq, a.notice_id, a.user_id, a.notice_date,
+			a.notice_title, a.notice_cont, a.notice_cnt, a.new_yn, b.row_cnt
+		    FROM (SELECT notice_id, user_id, to_char(notice_date,'yyyy-MM-dd') as notice_date , notice_title, notice_cont, notice_cnt,
+		    			 case 
+						    when NOTICE_DATE > sysdate -7  then 'y'
+						 else 'n'
+						 end as new_yn
+		            FROM por_notice
+		]]>
+		<if test="p_search_title != ''">
+		           	<![CDATA[
+						where notice_title like '%' || #{p_search_title} || '%'
+					]]>
+		</if>
+		<![CDATA[
+					order by notice_id desc
+		            ) a,
+		         (SELECT COUNT (notice_id) row_cnt
+		            FROM por_notice
+		]]>
+		<if test="p_search_title != ''">
+					<![CDATA[
+						where notice_title like '%' || #{p_search_title} || '%'
+					]]>
+		</if>
+		<![CDATA[
+		            ) b		
+			LIMIT #{limit} OFFSET #{offSet}
+        ]]>
+	</select>
+
+	<select id="selectNoticeId" parameterType="com.ktds.egov.vo.support.NoticeVo"
+		resultType="com.ktds.egov.vo.support.NoticeVo">
+	 	<![CDATA[
+			SELECT MAX (cast(notice_id as float)) + 1 notice_id
+			  FROM por_notice
+			 WHERE notice_id LIKE #{notice_id}||'%'
+        ]]>
+	</select>
+
+	<select id="selectNoticeView" parameterType="com.ktds.egov.vo.support.NoticeVo"
+		resultType="com.ktds.egov.vo.support.NoticeVo">
+	 	<![CDATA[		
+			select notice_id, user_id, notice_date, 
+			notice_title, notice_cont, notice_ord , 
+			prev_notice_id, prev_notice_title, 
+			next_notice_id,	next_notice_title
+			from
+			(
+			SELECT notice_id, user_id, to_char(notice_date,'yyyy.MM.dd') as notice_date , 
+				notice_title, notice_cont,
+				notice_ord ,
+				lag(notice_id,1) over(order by notice_id desc) as prev_notice_id,	
+				lag(notice_title,1) over(order by notice_id desc) as prev_notice_title, 
+				lead(notice_id,1) over(order by notice_id desc) as next_notice_id,	
+				lead(notice_title,1) over(order by notice_id desc) as next_notice_title 
+			FROM por_notice
+			)
+			WHERE notice_id = #{notice_id}  
+        ]]>
+	</select>
+
+	<!-- insertData -->
+	<insert id="insertNotice" parameterType="com.ktds.egov.vo.support.NoticeVo">
+	 	<![CDATA[
+           INSERT INTO POR_NOTICE
+            (NOTICE_ID,USER_ID,NOTICE_DATE,NOTICE_TITLE,
+            NOTICE_CONT,NOTICE_ORD
+            )
+		     VALUES (#{notice_id},#{user_id},sysdate,#{notice_title},
+            		#{notice_cont},'00'
+		            )
+        ]]>
+	</insert>
+
+	<update id="updateNotice" parameterType="com.ktds.egov.vo.support.NoticeVo">
+	 	<![CDATA[
+		            update POR_NOTICE
+		            set
+		            	notice_title = #{notice_title}
+		            	, notice_cont = #{notice_cont}
+		            where 
+		            	notice_id = #{notice_id}
+    	]]>
+	</update>
+
+	<update id="updateNoticeCnt" parameterType="com.ktds.egov.vo.support.NoticeVo">
+	 	<![CDATA[
+		            update POR_NOTICE
+		            set
+		            	notice_cnt = nvl(notice_cnt,0)+1
+		            where 
+		            	notice_id = #{notice_id}
+    	]]>
+	</update>
+
+	<delete id="deleteNotice" parameterType="com.ktds.egov.vo.support.NoticeVo">
+
+		delete from por_notice
+		where
+		notice_id = #{notice_id}
+
+	</delete>
+
+	<!-- ############################## -->
+	<!-- #### 자료실 쿼리 DataRoom #### -->
+	<!-- ############################## -->
+	 <!-- 2019.04.26 구조적보안진단 SQL인젝션 수정 -->
+	<select id="selectPersonal" parameterType="com.ktds.egov.vo.support.DataRoomVo"
+		resultType="com.ktds.egov.vo.support.DataRoomVo">
+	 	<![CDATA[
+			SELECT   rownum as seq, a.file_id, a.user_id, a.file_date, a.file_title,
+				a.file_path, a.file_name, a.file_ext, a.file_gbn, a.new_yn, b.rowcnt
+		    FROM (SELECT file_id, user_id, to_char(file_date,'yyyy-MM-dd') as file_date , file_title,
+		                 file_path, file_name, file_ext, file_gbn, 
+		                 case 
+						 when file_date > sysdate -7  then 'y'
+						 else 'n'
+						 end as new_yn
+				    FROM por_file_board
+			]]>
+		<if test="file_gbn == 'PS'.toString()">
+			where file_gbn = #{file_gbn}
+		</if>
+			<![CDATA[
+				    order by file_id desc
+				    ) a,
+				 (SELECT COUNT (file_id) rowcnt
+				    FROM por_file_board
+				    ]]>
+		<if test="file_gbn == 'PS'.toString()">
+			where file_gbn = #{file_gbn}
+		</if>
+			<![CDATA[
+			
+			
+				    ) b
+			ORDER BY file_id DESC
+			LIMIT #{limit} OFFSET #{offSet}
+			]]>
+	</select>
+
+	<select id="selectDataroomList" parameterType="com.ktds.egov.vo.support.DataRoomVo"
+		resultType="com.ktds.egov.vo.support.DataRoomVo">
+	 	<![CDATA[
+			SELECT file_id, file_title, to_char(file_date,'yyyy-MM-dd') as file_date,
+    			   case 
+					 when file_date > sysdate -7  then 'y'
+				   else 'n'
+				   end as new_yn
+            FROM por_file_board
+            where file_gbn != 'PS'
+            order by file_id desc	      		
+			LIMIT 4
+        ]]>
+	</select>
+    <!-- 2019.04.26 구조적보안진단 SQL인젝션 수정 -->
+	<select id="selectFile" parameterType="com.ktds.egov.vo.support.DataRoomVo"
+		resultType="com.ktds.egov.vo.support.DataRoomVo">
+	 	<![CDATA[
+			SELECT   rownum as seq, a.file_id, a.user_id, a.file_date, 
+				a.file_title, a.file_cont, a.file_path, a.file_name, 
+				a.file_ext, a.file_cnt, a.file_gbn, a.new_yn, b.rowcnt
+		    FROM (SELECT file_id, user_id, 
+		    			to_char(file_date,'yyyy-MM-dd') as file_date , file_title, 
+		    			file_cont, file_path, file_name, file_ext, file_cnt, file_gbn, 
+		                 case 
+						 when file_date > sysdate -7  then 'y'
+						 else 'n'
+						 end as new_yn 
+				    FROM por_file_board				    				    
+				    where file_gbn != 'PS'
+				    ]]>
+		<if
+			test="p_search_gbn != null and p_search_gbn != '' and p_search_gbn != 'ALL'.toString()">
+				    	<![CDATA[
+				    		and file_gbn = #{p_search_gbn}
+				    	]]>
+		</if>
+		<if test="p_search_title != ''">
+				    	<![CDATA[
+				    		and file_title like '%' || #{p_search_title} || '%'
+				    	]]>
+		</if>
+				    <![CDATA[
+				    	order by file_id desc
+				    ) a,
+				 (SELECT COUNT (file_id) rowcnt
+				    FROM por_file_board
+				    where file_gbn != 'PS'
+				    ]]>
+		<if
+			test="p_search_gbn != null and p_search_gbn != '' and p_search_gbn != 'ALL'.toString()">
+				    	<![CDATA[
+				    		and file_gbn = #{p_search_gbn}
+				    	]]>
+		</if>
+		<if test="p_search_title != ''">
+				    	<![CDATA[
+				    		and file_title like '%' || #{p_search_title} || '%'
+				    	]]>
+		</if>
+			<![CDATA[
+				    ) b
+			ORDER BY file_id DESC
+			LIMIT #{limit} OFFSET #{offSet}
+        ]]>
+	</select>
+
+	<!-- 클릭시 상세보기 -->
+	<select id="selectDataRoomView" parameterType="com.ktds.egov.vo.support.DataRoomVo"
+		resultType="com.ktds.egov.vo.support.DataRoomVo">
+	 	<![CDATA[
+	 	    select file_id, file_gbn, file_title, file_cont, 
+			        file_date, 
+			        file_name, file_ext ,
+			        user_id, file_path, file_cnt ,
+			        prev_file_id, prev_file_gbn, prev_file_title, 
+			        next_file_id, next_file_gbn , next_file_title,			        
+			        new_yn
+	 	    from
+	 	    (
+			select  a.file_id, a.file_gbn, a.file_title, a.file_cont, 
+			        to_char(a.file_date,'yyyy.MM.dd') as file_date, 
+			        a.file_name, a.file_ext ,
+			        a.user_id, a.file_path, a.file_cnt ,
+			        lag(a.file_id,1) over(order by file_id desc) as prev_file_id,
+			        lag(a.file_gbn,1) over(order by file_id desc) as prev_file_gbn,
+			        lag(a.file_title,1) over(order by file_id desc) as prev_file_title, 
+			        lead(a.file_id,1) over(order by file_id desc) as next_file_id,
+			        lead(a.file_gbn,1) over(order by file_id desc) as next_file_gbn ,
+			        lead(a.file_title,1) over(order by file_id desc) as next_file_title ,			        
+			        case 
+					when a.file_date > sysdate -7  then 'y'
+					else 'n'
+					end as new_yn 
+		    from   por_file_board a
+		    	where file_gbn != 'PS'
+		    )
+            where file_id = #{file_id} 
+        ]]>
+	</select>
+
+	<select id="selectFileId" parameterType="com.ktds.egov.vo.support.DataRoomVo"
+		resultType="com.ktds.egov.vo.support.DataRoomVo">
+	 	<![CDATA[
+			SELECT nvl(MAX(to_number(file_id)) + 1, to_number(to_char(sysdate,'yyyyMMdd') || '001')) as file_id
+            FROM por_file_board
+            where   file_id like to_char(sysdate, 'yyyyMMdd%')          
+        ]]>
+	</select>
+
+	<!-- insertData -->
+	<insert id="insertPersonal" parameterType="com.ktds.egov.vo.support.DataRoomVo">
+	 	<![CDATA[
+           insert into por_file_board
+	             (file_id, file_gbn, file_title, file_date, 
+	              file_name, file_ext, user_id, file_path)
+	       values(#{file_id},#{file_gbn},#{file_title}, sysdate, 
+	              #{file_name}, #{file_ext}, #{user_id}, #{file_path})
+        ]]>
+	</insert>
+
+	<insert id="insertDataRoom" parameterType="com.ktds.egov.vo.support.DataRoomVo">
+	 	<![CDATA[
+           insert into por_file_board
+	             (file_id, file_gbn, file_title, file_cont, file_date, 
+	              file_name, file_ext, user_id, file_path)
+	       values(#{file_id},#{file_gbn},#{file_title}, #{file_cont}, sysdate, 
+	              #{file_name}, #{file_ext}, #{user_id}, #{file_path})
+        ]]>
+	</insert>
+
+	<update id="updateDataRoom" parameterType="com.ktds.egov.vo.support.DataRoomVo">
+	 	<![CDATA[
+		            update por_file_board
+		            set
+		            	file_title = #{file_title}
+		            	, file_cont = #{file_cont}
+		]]>
+		<if test="file_name != null and file_name != ''">
+			, file_name = #{file_name}
+			, file_ext = #{file_ext}
+			, file_path = #{file_path}
+		</if>
+		where
+		file_id = #{file_id}
+
+	</update>
+
+	<delete id="deleteDataRoom" parameterType="com.ktds.egov.vo.support.DataRoomVo">
+		delete por_file_board
+		where file_id = #{file_id}
+	</delete>
+
+	<update id="updateDataRoomCnt" parameterType="com.ktds.egov.vo.support.DataRoomVo">
+	 	<![CDATA[
+		            update por_file_board
+		            set
+		            	file_cnt = nvl(file_cnt, 0)+1
+		            where 
+		            	file_id = #{file_id}	
+		]]>
+	</update>
+
+	<!-- ############################## -->
+	<!-- #### 자료실 쿼리 DataRoom 끝. #### -->
+	<!-- ############################## -->
+
+
+</mapper>

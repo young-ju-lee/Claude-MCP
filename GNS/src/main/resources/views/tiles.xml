@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE tiles-definitions PUBLIC
+ "-//Apache Software Foundation//DTD Tiles Configuration 2.1//EN"
+ "http://tiles.apache.org/dtds/tiles-config_2_1.dtd">
+ 
+<tiles-definitions>
+
+	<definition name="base.default" template="/WEB-INF/views/layouts/default.jsp">
+		<put-attribute name="title" value="SRMS Statistics." />
+		<put-attribute name="header" value="/WEB-INF/views/tiles/header.jsp" />
+		<put-attribute name="profileSection" value="/WEB-INF/views/tiles/profileSection.jsp" />
+		<put-attribute name="menuSection" value="/WEB-INF/views/tiles/menuSection.jsp" />
+		<put-attribute name="conditionSection" value="/WEB-INF/views/tiles/conditionSection.jsp" />
+		<put-attribute name="headerSection" value="/WEB-INF/views/tiles/headerSection.jsp" />
+		<put-attribute name="footerSection" value="/WEB-INF/views/tiles/footerSection.jsp" />
+	</definition>
+
+	<definition name="*" extends="base.default">
+        <put-attribute name="bodySection" value="/WEB-INF/views/{1}.jsp" />
+    </definition>
+    <definition name="*/*" extends="base.default">
+        <put-attribute name="bodySection" value="/WEB-INF/views/{1}/{2}.jsp" />
+    </definition>
+    <definition name="*/*/*" extends="base.default">
+        <put-attribute name="bodySection" value="/WEB-INF/views/{1}/{2}/{3}.jsp" />
+    </definition>
+</tiles-definitions>

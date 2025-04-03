@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:p="http://www.springframework.org/schema/p"	 
+	xmlns:mvc="http://www.springframework.org/schema/mvc" 
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd
+		http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd">
+ 
+	<!-- component scan -->
+	<context:component-scan base-package="com.ktds.framework"
+		use-default-filters="false">
+		<context:include-filter type="annotation"
+			expression="org.springframework.stereotype.Controller" />
+	</context:component-scan>
+	<!-- component scan -->
+	
+	<!-- component scan -->
+	<context:component-scan base-package="com.ktds.egov"
+		use-default-filters="false">
+		<context:include-filter type="annotation"
+			expression="org.springframework.stereotype.Controller" />
+	</context:component-scan>
+	<!-- component scan -->
+	
+	<!-- component scan -->	
+	<!-- 
+	<context:component-scan base-package="com.ktds.egov">
+		<context:include-filter type="annotation"
+			expression="org.springframework.stereotype.Component" />
+	</context:component-scan>
+	 -->
+	<!-- component scan -->
+
+	<!-- 
+	<mvc:interceptors>		
+		<mvc:interceptor> 
+		    <mvc:mapping path="/**/*" /> 
+			<ref bean="aInterceptor" />
+		</mvc:interceptor> 		
+	</mvc:interceptors>
+ 	-->
+ 
+	<!-- <bean id="tilesViewResolver" class="org.springframework.web.servlet.view.UrlBasedViewResolver"> 
+		<property name="viewClass"> <value>org.springframework.web.servlet.view.tiles2.TilesView</value> 
+		</property> <property name="order" value="1" /> </bean> <bean id="tilesConfigurer" 
+		class="org.springframework.web.servlet.view.tiles2.TilesConfigurer"> <property 
+		name="definitions"> <list> <value>/WEB-INF/views/tiles.xml</value> </list> 
+		</property> </bean> -->
+	<bean id="UrlBaseResolver"
+		class="org.springframework.web.servlet.view.UrlBasedViewResolver">
+		<property name="viewClass"
+			value="org.springframework.web.servlet.view.JstlView" />
+		<property name="prefix" value="/WEB-INF/jsp/" />
+		<property name="suffix" value=".jsp" />
+		<property name="order" value="1" />
+		<property name="contentType" value="text/html; charset=UTF-8"/>
+	</bean>
+
+	<bean
+		class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="prefix" value="/WEB-INF/jsp/" />
+		<property name="suffix" value=".jsp" />
+		<property name="order" value="2" />
+	</bean>
+	
+	<!-- <bean id="exceptionMapping" class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver"> 
+		<property name="exceptionMappings"> <map> <entry key="java.lang.Exception" 
+		value="/WEB-INF/jsp/errorPages/error"/> </map> </property> <property name="defaultErrorView" 
+		value="/WEB-INF/jsp/errorPages/error" /> </bean> -->
+	<!-- <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver"> 
+		<property name="maxUploadSize" value="16777216" /> <property name="defaultEncoding" 
+		value="UTF-8" /> </bean> -->
+
+	<!-- Globalization -->
+	 
+	
+	<!-- 
+	<bean id="messageSource"
+	class="org.springframework.context.support.ResourceBundleMessageSource">
+	<property name="basenames">
+		<list>
+			<value>/WEB-INF/properties/message</value>
+		</list>
+	</property>
+    </bean>
+	<bean id="localeChangeInterceptor"
+		class="org.springframework.web.servlet.i18n.LocaleChangeInterceptor">
+		<property name="paramName" value="lang" />
+	</bean>
+	<bean id="localeResolver"
+		class="org.springframework.web.servlet.i18n.CookieLocaleResolver">
+		<property name="defaultLocale" value="en" />
+	</bean>
+	
+	<bean id="handlerMapping"
+		class="org.springframework.web.servlet.mvc.annotation.DefaultAnnotationHandlerMapping">
+		<property name="interceptors">
+			<ref bean="localeChangeInterceptor" />
+		</property>
+	</bean> 
+     -->
+
+	<!-- End Globalization -->
+
+	<mvc:interceptors>
+		<bean class="com.ktds.egov.common.util.CSRFHandlerInterceptor" />
+	</mvc:interceptors>
+
+</beans>
+
+	

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE taglib
+        PUBLIC "-//Sun Microsystems, Inc.//DTD JSP Tag Library 1.1//EN"
+	"http://java.sun.com/j2ee/dtds/web-jsptaglibrary_1_1.dtd">
+
+<taglib>
+	<tlibversion>1.0</tlibversion>
+	<jspversion>1.1</jspversion>
+	<shortname>design</shortname>
+	<info>NPP Custom Tags</info>
+  
+	<tag>
+		<name>pagelist</name>
+		<tagclass>com.ktds.egov.common.util.PageTag</tagclass>
+		<bodycontent>empty</bodycontent>
+		<attribute>
+			<name>pageCount</name>
+			<required>true</required>		
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>listCount</name>
+			<required>true</required>		
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>currPage</name>
+			<required>true</required>		
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>totCount</name>
+			<required>true</required>		
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>funcName</name>
+			<required>true</required>		
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+	</tag>
+</taglib>

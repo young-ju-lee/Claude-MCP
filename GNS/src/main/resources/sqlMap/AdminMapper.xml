@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktds.egov.admin">
+
+	<!-- ********************************************************************** -->
+	<!-- ******** 관리자권한 ( 팝업창관리 쿼리 ) ******** -->
+	<!-- ********************************************************************** -->
+
+	<!-- 팝업창관리 내역 저장 -->
+	<insert id="insertPopup" parameterType="com.ktds.egov.vo.admin.PopupVo">
+	 	<![CDATA[
+           insert into por_popup(pop_id, pop_type, pop_date, 
+                                 pop_fr_date, pop_to_date, pop_title, pop_cont,
+                                 pop_width, pop_height, user_id, pop_yn)
+                         values(#{pop_id}, #{pop_type}, sysdate,
+                                to_date(#{pop_fr_date, jdbcType=VARCHAR}, 'YYYY-MM-DD') ,
+                                to_date(#{pop_to_date, jdbcType=VARCHAR}, 'YYYY-MM-DD') ,   
+            		            #{pop_title}, #{pop_cont},
+            		            #{pop_width}, #{pop_height}, #{user_id}, #{pop_yn})          		             
+        ]]>
+	</insert>
+
+	<!-- 팝업창관리 내역 저장 -->
+	<update id="updatePopup" parameterType="com.ktds.egov.vo.admin.PopupVo">
+	 	<![CDATA[
+           update por_popup
+           set
+                pop_type = #{pop_type} ,
+                pop_date = sysdate ,
+                pop_fr_date = to_date(#{pop_fr_date, jdbcType=VARCHAR}, 'YYYY-MM-DD') ,
+                pop_to_date = to_date(#{pop_to_date, jdbcType=VARCHAR}, 'YYYY-MM-DD') ,
+                pop_title = #{pop_title} ,
+                pop_cont = #{pop_cont} ,
+                pop_width = #{pop_width} ,
+                pop_height = #{pop_height} ,
+                pop_yn = #{pop_yn}                 
+          where pop_id = #{pop_id}     		             
+        ]]>
+	</update>
+
+	<!-- 팝업창관리 내역 삭제 -->
+	<delete id="deletePopup" parameterType="com.ktds.egov.vo.admin.PopupVo">
+	    <![CDATA[		
+		delete por_popup where pop_id = #{pop_id}			
+	    ]]>
+	</delete>
+
+	<!-- 팝업창관리 내역 ID 갖고 오기 -->
+	<select id="selectPopupId" resultType="String">
+	 	<![CDATA[
+			select nvl(max(to_number(pop_id)) + 1, to_number(to_char(sysdate,'yyyyMMdd') || '001')) as file_id
+			from   por_popup
+			where   pop_id like to_char(sysdate, 'yyyyMMdd%')
+        ]]>
+	</select>
+     <!-- 2019.04.26 구조적보안진단 SQL인젝션 수정 -->
+	<select id="selectPopupList" parameterType="com.ktds.egov.vo.admin.PopupVo"
+		resultType="com.ktds.egov.vo.admin.PopupVo">
+	 	<![CDATA[
+			select  rownum as seq, a.pop_id, a.pop_type, a.pop_date,
+				a.pop_fr_date, a.pop_to_date, a.pop_title, a.pop_cont,
+				a.pop_width, a.pop_height, a.user_id, a.pop_yn, b.row_cnt
+			from
+			(
+			select  a.pop_id, a.pop_type, to_char(a.pop_date,'yyyy-MM-dd') as pop_date , 
+			        to_char(a.pop_fr_date, 'yyyy-MM-dd') as pop_fr_date , 
+			        to_char(a.pop_to_date, 'yyyy-MM-dd') as pop_to_date , 
+			        a.pop_title, a.pop_cont,
+			        a.pop_width, a.pop_height, a.user_id, a.pop_yn
+			from    por_popup a
+		]]>
+		<if test="p_search_title != ''">
+				<![CDATA[
+					where   a.pop_title like '%' || #{p_search_title} || '%'
+				]]>
+		</if>
+			<![CDATA[
+				order by a.pop_id desc
+			) a,
+			(
+			select  count(*) as row_cnt
+			from    por_popup
+			]]>
+		<if test="p_search_title != ''">
+				<![CDATA[
+					where pop_title like '%' || #{p_search_title} || '%'
+				]]>
+		</if>
+		<![CDATA[
+			) b			
+			limit #{limit} offset #{offSet}
+        ]]>
+	</select>
+
+
+	<select id="selectPopup" parameterType="String"
+		resultType="com.ktds.egov.vo.admin.PopupVo">
+	 	<![CDATA[			
+			select  a.pop_id, a.pop_type, to_char(a.pop_date,'yyyy.MM.dd') as pop_date ,
+			        to_char(a.pop_fr_date, 'yyyy-MM-dd') as pop_fr_date , 
+			        to_char(a.pop_to_date, 'yyyy-MM-dd') as pop_to_date , 
+			        a.pop_title, replace(a.pop_cont,'_style_', 'style') as pop_cont,
+			        a.pop_width, a.pop_height, a.user_id, a.pop_yn
+			from    por_popup a
+			where   a.pop_id = #{pop_id}
+        ]]>
+	</select>
+	<!-- ********************************************************************** -->
+	<!-- ******** 관리자권한 ( 팝업창관리 쿼리 ) 끝. ******** -->
+	<!-- ********************************************************************** -->
+
+
+	<select id="selectMainPopup" parameterType="String"
+		resultType="com.ktds.egov.vo.admin.PopupVo">
+		select a.pop_id, a.pop_type, to_char(a.pop_date,'yyyy.MM.dd') as pop_date ,
+		to_char(a.pop_fr_date, 'yyyy-MM-dd') as pop_fr_date ,
+		to_char(a.pop_to_date, 'yyyy-MM-dd') as pop_to_date ,
+		a.pop_title, replace(a.pop_cont,'_style_', 'style') as pop_cont,
+		a.pop_width, a.pop_height, a.user_id, a.pop_yn
+		from por_popup a
+		where sysdate between a.pop_fr_date and a.pop_to_date
+		and a.pop_yn = 'Y'
+		order by a.pop_date desc
+		limit 1
+	</select>
+
+
+
+</mapper>

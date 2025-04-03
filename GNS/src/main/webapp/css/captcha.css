@@ -1,0 +1,159 @@
+
+
+fieldset {
+  padding: 3px 10px 10px 10px;
+  margin: 11px;
+  width: 410px;
+  display: block;
+  
+ vertical-align: baseline;
+}
+
+legend {
+  padding: 2px 7px;
+  margin: 0;
+  color: #999999;
+  font-size: 13px;
+}
+
+
+
+div.input {
+  margin: 7px 0;
+}
+
+input.textbox {
+  width: 223px;
+	margin-top: 3px;
+}
+
+.validationDiv {
+  padding: 0px 0px 5px 0px;
+  margin: 8px 0px 0px 0px;
+}
+
+.correct {
+  color: Green;
+  font-size: 0.8em;
+  font-weight: bold;
+}
+
+.incorrect {
+  color: Red;
+  font-size: 0.8em;
+  font-weight: bold;
+}
+
+.column {
+  display: inline-block;
+  vertical-align: top;
+}
+
+
+.navigation {
+  margin: 20px 5px 5px 0;
+}
+
+.warning {
+  color: Red;
+}
+
+#systeminfo {
+  margin: 25px 20px 20px 10px;
+  padding: 0 10px;
+  border: 1px solid #ddd;
+  clear: both;
+  font-size: 11px;
+  color: #999;
+  background-color: #f0f0f0;
+}
+
+#systeminfo  p {
+  margin: 10px 0;
+  padding: 0;
+}
+.BDC_CaptchaDiv {
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: visible !important;
+}
+
+.BDC_CaptchaImageDiv {
+  margin: 0 !important;
+  padding: 0 !important;
+  display: -moz-inline-stack;
+  display: inline-block !important;
+  vertical-align: top !important; 
+  zoom: 1 !important; 
+  *display: inline !important;
+}
+
+.BDC_CaptchaIconsDiv {
+  text-align: left !important;
+  margin: 0 2px -4px 2px !important;
+  padding: 0 !important;
+  display: -moz-inline-stack;
+  display: inline-block !important;
+   vertical-align: center !important; 
+   zoom: 1 !important; 
+  *display: inline !important; 
+}
+
+
+.BDC_CaptchaDiv a:link, .BDC_CaptchaDiv a:visited, .BDC_CaptchaDiv a:focus, .BDC_CaptchaDiv a:hover, .BDC_CaptchaDiv a:active {
+  margin: 0 !important;
+  padding: 0 !important;
+  background-color: transparent !important;
+  border: none !important;
+   text-decoration: none !important; 
+  outline: none !important;
+  -moz-outline-style: none !important;
+  display: -moz-inline-stack;
+  display: inline-block !important;
+   vertical-align: top !important; 
+   zoom: 1 !important; 
+  -webkit-box-shadow: none !important;
+  -moz-box-shadow: none !important;
+  box-shadow: none !important;
+  *display: inline !important;
+}
+
+.BDC_CaptchaDiv a:focus, .BDC_CaptchaDiv a:active {
+  outline: 1px dotted #333 !important;
+}
+
+.BDC_CaptchaIconsDiv a:link, .BDC_CaptchaIconsDiv a:visited, .BDC_CaptchaIconsDiv a:focus, .BDC_CaptchaIconsDiv a:hover, .BDC_CaptchaIconsDiv a:active {
+  margin: 1px 2px 4px 2px !important;
+}
+
+
+.BDC_CaptchaDiv a img {
+  border: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: block !important;
+}
+
+.BDC_CaptchaIconsDiv a.BDC_ReloadLink {
+  display: done !important;
+}
+
+
+.BDC_Placeholder {
+  visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+*html .BDC_Placeholder {
+  display: none !important;
+}
+
+*:first-child+html .BDC_Placeholder {
+  display: none !important;
+}
+
+.BDC_Warning {
+  font-size: 12px !important;
+  color: red !important;
+}

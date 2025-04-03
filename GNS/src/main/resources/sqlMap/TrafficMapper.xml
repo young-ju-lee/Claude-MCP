@@ -1,0 +1,664 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktds.egov.traffic">
+	
+	<!-- ********************************************************************** -->
+	<!-- ********            트래픽정보 관련 쿼리                      ******** -->
+	<!-- ********************************************************************** -->
+	<select id="checkllnum" parameterType="com.ktds.egov.vo.traffic.TrafficVo"	
+	resultType="com.ktds.egov.vo.traffic.TrafficVo">
+		<![CDATA[ 		
+			select cust_name,
+			       nat_name, 
+			       svc_no as llnum,
+			       sa_id
+			from tb_customerorder	
+			where sa_cd ='0730' and ord_type_cd != 'D1'
+		]]>	
+		<if test="search_llnum != null and search_llnum != ''">	
+			<![CDATA[
+				and svc_no = #{search_llnum}
+			]]>
+		</if>
+	</select>	
+	
+	<select id="selectllnumList2" parameterType="com.ktds.egov.vo.traffic.TrafficVo"	
+	resultType="com.ktds.egov.vo.traffic.TrafficVo">
+		<![CDATA[ 		
+			select cust_name,
+			       nat_name, 
+			       svc_no as llnum, sa_id, 
+			       sa_dtl_cd, 
+			       sa_cd,line_spec_cd, 
+			       svc_distance, 
+			       u_exch_ofc_cd, 
+			       l_exch_ofc_cd,
+			       ord_type_cd
+			from tb_customerorder
+			where  cust_id = 
+			  ( select  max(cust_id)  
+			    from tb_customerorder
+			    where svc_no = #{search_llnum})
+			and    sa_cd ='0730' and ord_type_cd != 'D1'
+		]]>		
+	</select>	
+	
+	<select id="selectllnumList3" parameterType="com.ktds.egov.vo.traffic.TrafficVo"	
+	resultType="com.ktds.egov.vo.traffic.TrafficVo">
+		<![CDATA[ 		
+			select a.cust_name, a.nat_name, 
+				a.svc_no as llnum, a.sa_id, a.sa_dtl_cd, 
+				a.sa_cd, b.nm1 as line_spec_cd, a.svc_distance, a.u_exch_ofc_cd, 
+				a.l_exch_ofc_cd 
+				from tb_customerorder a
+				left outer join por_band b
+				on a.line_spec_cd = b.code
+				where  a.svc_no in
+			   (
+			     select llnum
+			     from   tb_egov_ne_nic_group
+			     where  nescode = #{search_nat}
+			   )
+			and    sa_cd ='0730' and ord_type_cd != 'D1'
+		]]>		
+			<if test="search_llnum != null and search_llnum != ''">
+			<![CDATA[ 			
+		    and  svc_no = trim(#{search_llnum}) 
+		    ]]>		
+		     </if>		       
+	</select>	
+	<!-- 2018.12.21 admin 전체회선 조회 쿼리 추가  -->
+	<select id="selectllnumList_admin" parameterType="com.ktds.egov.vo.traffic.TrafficVo"	
+	resultType="com.ktds.egov.vo.traffic.TrafficVo">
+		<![CDATA[ 		
+			select a.cust_name, a.nat_name, 
+				a.svc_no as llnum, a.sa_id, a.sa_dtl_cd, 
+				a.sa_cd, b.nm1 as line_spec_cd, a.svc_distance, a.u_exch_ofc_cd, 
+				a.l_exch_ofc_cd 
+				from tb_customerorder a
+				left outer join por_band b
+				on a.line_spec_cd = b.code
+				
+			where    sa_cd ='0730' and ord_type_cd != 'D1'
+		    and  svc_no = trim(#{search_llnum_admin}) 
+		    ]]>		
+		 	       
+	</select>
+	
+	<select id="selectTrafficRealList" parameterType="com.ktds.egov.vo.traffic.TrafficVo"	
+	resultType="com.ktds.egov.vo.traffic.TrafficVo">
+		<![CDATA[ 		
+ 			select  to_char(to_timestamp(t1.collect_time,'yyyymmddhh24mi'),'YYYY-MM-DD HH24:MI') collect_time,
+ 			        t2.cust_name,
+ 			        t2.nat_name,
+ 			        t2.band,
+ 			        round( avg(t1.inbps)/1024 ) inbps ,
+ 			        case 
+                    when t2.band is null then 0
+                    when t2.band = 0     then 0
+                    else
+                    round(round(AVG(t1.inbps)/1024) / t2.band * 100)
+                    end as per_inbps , 
+ 			        round( avg(t1.outbps)/1024 ) outbps,
+ 			        case 
+                    when t2.band is null then 0
+                    when t2.band = 0     then 0
+                    else
+                    round(round(AVG(t1.outbps)/1024) / t2.band * 100)
+                    end as per_outbps 
+			from   tb_ifsendtraffic_history t1,
+			       (select distinct b.svc_no , b.sa_id, b.cust_name, b.nat_name, c.value1 as band 
+			        from tb_customerorder b, por_band c
+			        where b.sa_cd ='0730'
+			        and   b.line_spec_cd = c.code
+		]]>	
+		<choose>
+			<when test="search_llnum != null and search_llnum != ''">	
+					and  b.svc_no = trim(#{search_llnum})
+			</when>		
+		</choose>
+		<![CDATA[ 	
+			        ) t2
+			where t1.llnum = t2.svc_no						
+		 ]]>    
+		 <if test="search_from != null and search_from != ''">
+		    and collect_time BETWEEN #{search_from}||'0000'
+		                                               and    #{search_to}||'2359'
+		 </if>
+		 	 group by to_char(to_timestamp(t1.collect_time,'yyyymmddhh24mi'),'YYYY-MM-DD HH24:MI'),
+		              t2.cust_name,
+ 			          t2.nat_name ,
+ 			          t2.band
+ 			 order by to_char(to_timestamp(t1.collect_time,'yyyymmddhh24mi'),'YYYY-MM-DD HH24:MI')
+	</select>
+	
+	<select id="selectTrafficHourList" parameterType="com.ktds.egov.vo.traffic.TrafficVo"	
+	resultType="com.ktds.egov.vo.traffic.TrafficVo">
+		<![CDATA[ 		
+ 			select  to_char(to_timestamp(t1.collect_time,'yyyymmddhh24mi'),'YYYY/MM/DD HH24') collect_time,
+ 			       t2.cust_name,
+ 			        t2.nat_name,
+ 			        t2.band,
+ 			        round( MAX(t1.inbps)/1024 ) inbps ,
+ 			        case 
+                    when t2.band is null then 0
+                    when t2.band = 0     then 0
+                    else
+                    round(round(MAX(t1.inbps)/1024) / t2.band * 100)
+                    end as per_inbps , 
+ 			        round( MAX(t1.outbps)/1024 ) outbps,
+ 			        case 
+                    when t2.band is null then 0
+                    when t2.band = 0     then 0
+                    else
+                    round(round(MAX(t1.outbps)/1024) / t2.band * 100)
+                    end as per_outbps 
+			from   tb_ifsendtraffic_history t1,
+			       (select distinct b.svc_no , b.sa_id, b.cust_name, b.nat_name, c.value1 as band 
+			        from tb_customerorder b, por_band c
+			        where b.sa_cd ='0730'
+			        and   b.line_spec_cd = c.code
+		]]>	
+		<choose>
+			<when test="search_llnum != null and search_llnum != ''">	
+					and svc_no = trim(#{search_llnum})
+			</when>			
+		</choose>
+		<![CDATA[ 	
+			        ) t2
+			where t1.llnum = t2.svc_no			
+		 ]]>   
+		 <if test="search_from != null and search_from != ''">
+		    and  collect_time BETWEEN #{search_from}||'0000'
+		                                               and    #{search_to}||'2359'
+		 </if>
+		 group by to_char(to_timestamp(t1.collect_time,'yyyymmddhh24mi'),'YYYY/MM/DD HH24'),
+		          t2.cust_name,
+ 			      t2.nat_name ,
+ 			      t2.band
+ 		 order by to_char(to_timestamp(t1.collect_time,'yyyymmddhh24mi'),'YYYY/MM/DD HH24')
+	</select>
+	
+	<select id="selectTrafficDayList" parameterType="com.ktds.egov.vo.traffic.TrafficVo"	
+	resultType="com.ktds.egov.vo.traffic.TrafficVo">
+		<![CDATA[ 		
+ 			select  to_char(to_timestamp(t1.collect_time,'yyyymmddhh24mi'),'YYYY/MM/DD') collect_time,
+ 			        t2.cust_name,
+ 			        t2.nat_name,
+ 			        t2.band,
+ 			        round( MAX(t1.inbps)/1024 ) inbps ,
+ 			        case 
+                    when t2.band is null then 0
+                    when t2.band = 0     then 0
+                    else
+                    round(round(MAX(t1.inbps)/1024) / t2.band * 100)
+                    end as per_inbps ,                        
+ 			        round( MAX(t1.outbps)/1024 ) outbps,
+ 			        case 
+                    when t2.band is null then 0
+                    when t2.band = 0     then 0
+                    else
+                    round(round(MAX(t1.outbps)/1024) / t2.band * 100)
+                    end as per_outbps 
+			from   tb_ifsendtraffic_history t1,
+			       (select distinct b.svc_no , b.sa_id, b.cust_name, b.nat_name, c.value1 as band 
+			        from tb_customerorder b, por_band c
+			        where b.sa_cd ='0730'
+			        and   b.line_spec_cd = c.code
+		]]>	
+		<choose>
+			<when test="search_llnum != null and search_llnum != ''">	
+					and svc_no = trim(#{search_llnum})
+			</when>
+			<otherwise>
+					and nat_name = #{search_nat}
+			</otherwise>
+		</choose>
+		<![CDATA[ 	
+			        ) t2			        
+			where t1.llnum = t2.svc_no		
+		 ]]>   
+		 <if test="search_from != null and search_from != ''">
+		    and  collect_time BETWEEN #{search_from}||'0000'
+		                                               and    #{search_to}||'2359'
+		 </if>
+		 group by to_char(to_timestamp(t1.collect_time,'yyyymmddhh24mi'),'YYYY/MM/DD'),
+		          t2.cust_name,
+ 			      t2.nat_name,
+ 			      t2.band
+ 		order by to_char(to_timestamp(t1.collect_time,'yyyymmddhh24mi'),'YYYY/MM/DD')
+	</select>
+	
+		<select id="selectTrafficMonthList" parameterType="com.ktds.egov.vo.traffic.TrafficVo"	
+	resultType="com.ktds.egov.vo.traffic.TrafficVo">
+		<![CDATA[ 		
+ 			select  to_char(to_timestamp(t1.collect_time,'yyyymmddhh24mi'),'YYYY/MM') collect_time,
+ 			          t2.cust_name,
+ 			        t2.nat_name,
+ 			        t2.band,
+ 			        round(MAX(t1.inbps)/1024 ) inbps ,
+ 			        case 
+                    when t2.band is null then 0
+                    when t2.band = 0     then 0
+                    else
+                    round(round(MAX(t1.inbps)/1024) / t2.band * 100)
+                    end as per_inbps ,                        
+ 			        round(MAX(t1.outbps)/1024 ) outbps,
+ 			        case 
+                    when t2.band is null then 0
+                    when t2.band = 0     then 0
+                    else
+                    round(round(MAX(t1.outbps)/1024) / t2.band * 100)
+                    end as per_outbps 
+			from   tb_ifsendtraffic_history t1,
+			       (select distinct b.svc_no , b.sa_id, b.cust_name, b.nat_name, c.value1 as band 
+			        from tb_customerorder b, por_band c
+			        where b.sa_cd ='0730'
+			        and   b.line_spec_cd = c.code
+		]]>	
+		<choose>
+			<when test="search_llnum != null and search_llnum != ''">	
+					and svc_no = trim(#{search_llnum})
+			</when>			
+		</choose>
+		<![CDATA[ 	
+			        ) t2
+			where t1.llnum = t2.svc_no				
+		 ]]>   
+		 <if test="search_from != null and search_from != ''">
+		 <![CDATA[ 	
+		    and  collect_time BETWEEN #{search_from}||'0000'
+		                                               and    #{search_to}||'2359'
+         ]]>   
+		 </if>
+		 <![CDATA[
+		 group by to_char(to_timestamp(t1.collect_time,'yyyymmddhh24mi'),'YYYY/MM'),
+		          t2.cust_name,
+ 			      t2.nat_name ,
+ 			      t2.band
+ 		 order by to_char(to_timestamp(t1.collect_time,'yyyymmddhh24mi'),'YYYY/MM')
+ 		 ]]>   	      
+	</select>
+	
+	<select id="selectTrafficGraphRealList" parameterType="com.ktds.egov.vo.traffic.TrafficVo"	
+	resultType="com.ktds.egov.vo.traffic.TrafficVo">
+		<![CDATA[ 		
+ 			select  to_char(to_timestamp(t1.collect_time,'yyyymmddhh24mi'),'HH24:MI') collect_time,
+ 			        t2.cust_name,
+ 			        t2.nat_name,
+ 			        round( avg(t1.inbps)/1024 ) inbps ,
+ 			        round( avg(t1.outbps)/1024 ) outbps 
+			from   tb_ifsendtraffic_history t1,
+			       (select distinct svc_no, sa_id, cust_name, nat_name 
+			        from tb_customerorder 
+			        where  sa_cd ='0730'
+		]]>	
+		<choose>
+			<when test="search_llnum != null and search_llnum != ''">	
+					and  svc_no = trim(#{search_llnum})
+			</when>			
+		</choose>
+		<![CDATA[ 	
+			        ) t2
+			where t1.llnum = t2.svc_no			
+		 ]]>    
+		 <if test="search_from != null and search_from != ''">
+		    and t1.collect_time BETWEEN to_char(to_date(#{search_from}), 'yyyymmddhh24mi') and to_char(to_date(#{search_from})+0.99999, 'yyyymmddhh24mi')
+		 </if>
+		 	 group by to_char(to_timestamp(t1.collect_time,'yyyymmddhh24mi'),'HH24:MI'),
+		              t2.cust_name,
+ 			          t2.nat_name
+ 			 order by to_char(to_timestamp(t1.collect_time,'yyyymmddhh24mi'),'HH24:MI')         
+	</select>
+	
+	<select id="selectTrafficGraphHourList" parameterType="com.ktds.egov.vo.traffic.TrafficVo"	
+	resultType="com.ktds.egov.vo.traffic.TrafficVo">
+		<![CDATA[ 		
+ 			select  to_char(to_timestamp(t1.collect_time,'yyyymmddhh24mi'),'HH24') collect_time,
+ 			        t2.cust_name,
+ 			        t2.nat_name,
+ 			        round( MAX(t1.inbps)/1024 ) inbps ,
+ 			        round( MAX(t1.outbps)/1024 ) outbps
+			from   tb_ifsendtraffic_history t1,
+			       (select distinct svc_no, sa_id, cust_name, nat_name 
+			        from tb_customerorder 
+			        where  sa_cd ='0730'
+		]]>	
+		<choose>
+			<when test="search_llnum != null and search_llnum != ''">	
+					and svc_no = trim(#{search_llnum})
+			</when>			
+		</choose>
+		<![CDATA[ 	
+			        ) t2
+			where t1.llnum = t2.svc_no				
+		 ]]>   
+		 <if test="search_from != null and search_from != ''">
+		    and t1.collect_time BETWEEN to_char(to_date(#{search_from}), 'yyyymmddhh24mi') and to_char(to_date(#{search_from})+0.99999, 'yyyymmddhh24mi')
+		 </if>
+		 group by to_char(to_timestamp(t1.collect_time,'yyyymmddhh24mi'),'HH24'),
+		          t2.cust_name,
+ 			      t2.nat_name
+ 		 order by to_char(to_timestamp(t1.collect_time,'yyyymmddhh24mi'),'HH24')    
+	</select>
+	
+	
+	<select id="selectTrafficGraphDayList" parameterType="com.ktds.egov.vo.traffic.TrafficVo"	
+	resultType="com.ktds.egov.vo.traffic.TrafficVo">
+		<![CDATA[ 		
+ 			select  to_char(to_timestamp(t1.collect_time,'yyyymmddhh24mi'),'YYYY/MM/DD') collect_time,
+ 			        t2.cust_name,
+ 			        t2.nat_name,
+ 			        t2.band,
+ 			        round( MAX(t1.inbps)/1024 ) inbps ,
+ 			        case 
+                    when t2.band is null then 0
+                    when t2.band = 0     then 0
+                    else
+                    round(round(MAX(t1.inbps)/1024) / t2.band * 100)
+                    end as per_inbps ,                        
+ 			        round( MAX(t1.outbps)/1024 ) outbps,
+ 			        case 
+                    when t2.band is null then 0
+                    when t2.band = 0     then 0
+                    else
+                    round(round(MAX(t1.outbps)/1024) / t2.band * 100)
+                    end as per_outbps 
+			from   tb_ifsendtraffic_history t1,
+			       (select distinct b.svc_no , b.sa_id, b.cust_name, b.nat_name, c.value1 as band 
+			        from tb_customerorder b, por_band c
+			        where b.sa_cd ='0730'
+			        and   b.line_spec_cd = c.code
+		]]>	
+		<choose>
+			<when test="search_llnum != null and search_llnum != ''">	
+					and svc_no = trim(#{search_llnum})
+			</when>
+			<otherwise>
+					and nat_name = #{search_nat}
+			</otherwise>
+		</choose>
+		<![CDATA[ 	
+			        ) t2			        
+			where t1.llnum = t2.svc_no		
+		 ]]>   
+		 <if test="search_from != null and search_from != ''">
+		    and  collect_time BETWEEN #{search_from}||'0000'
+		                                               and    #{search_to}||'2359'
+		 </if>
+		 group by to_char(to_timestamp(t1.collect_time,'yyyymmddhh24mi'),'YYYY/MM/DD'),
+		          t2.cust_name,
+ 			      t2.nat_name,
+ 			      t2.band
+ 		order by to_char(to_timestamp(t1.collect_time,'yyyymmddhh24mi'),'YYYY/MM/DD')
+	</select>
+	
+		<select id="selectTrafficGraphMonthList" parameterType="com.ktds.egov.vo.traffic.TrafficVo"	
+	resultType="com.ktds.egov.vo.traffic.TrafficVo">
+		<![CDATA[ 		
+ 			select  to_char(to_timestamp(t1.collect_time,'yyyymmddhh24mi'),'YYYY/MM') collect_time,
+ 			          t2.cust_name,
+ 			        t2.nat_name,
+ 			        t2.band,
+ 			        round(MAX(t1.inbps)/1024 ) inbps ,
+ 			        case 
+                    when t2.band is null then 0
+                    when t2.band = 0     then 0
+                    else
+                    round(round(MAX(t1.inbps)/1024) / t2.band * 100)
+                    end as per_inbps ,                        
+ 			        round(MAX(t1.outbps)/1024 ) outbps,
+ 			        case 
+                    when t2.band is null then 0
+                    when t2.band = 0     then 0
+                    else
+                    round(round(MAX(t1.outbps)/1024) / t2.band * 100)
+                    end as per_outbps 
+			from   tb_ifsendtraffic_history t1,
+			       (select distinct b.svc_no , b.sa_id, b.cust_name, b.nat_name, c.value1 as band 
+			        from tb_customerorder b, por_band c
+			        where b.sa_cd ='0730'
+			        and   b.line_spec_cd = c.code
+		]]>	
+		<choose>
+			<when test="search_llnum != null and search_llnum != ''">	
+					and svc_no = trim(#{search_llnum})
+			</when>			
+		</choose>
+		<![CDATA[ 	
+			        ) t2
+			where t1.llnum = t2.svc_no				
+		 ]]>   
+		 <if test="search_from != null and search_from != ''">
+		 <![CDATA[ 	
+		    and  collect_time BETWEEN #{search_from}||'0000'
+		                                               and    #{search_to}||'2359'
+         ]]>   
+		 </if>
+		 <![CDATA[
+		 group by to_char(to_timestamp(t1.collect_time,'yyyymmddhh24mi'),'YYYY/MM'),
+		          t2.cust_name,
+ 			      t2.nat_name ,
+ 			      t2.band
+ 		 order by to_char(to_timestamp(t1.collect_time,'yyyymmddhh24mi'),'YYYY/MM')
+ 		 ]]>   	      
+	</select>
+	
+	<select id="selectTrafficExcelRealList" parameterType="com.ktds.egov.vo.traffic.TrafficVo"	
+	resultType="com.ktds.egov.vo.traffic.TrafficVo">
+		<![CDATA[ 		
+ 			select  to_char(to_timestamp(t1.collect_time,'yyyymmddhh24mi'),'YYYY-MM-DD HH24:MI') collect_time,
+ 			        t2.cust_name,
+ 			        t2.nat_name,
+ 			        t2.band,
+ 			        round( avg(t1.inbps)/1024 ) inbps ,
+ 			        case 
+                    when t2.band is null then 0
+                    when t2.band = 0     then 0
+                    else
+                    round(round(AVG(t1.inbps)/1024) / t2.band * 100)
+                    end as per_inbps , 
+ 			        round( avg(t1.outbps)/1024 ) outbps,
+ 			        case 
+                    when t2.band is null then 0
+                    when t2.band = 0     then 0
+                    else
+                    round(round(AVG(t1.outbps)/1024) / t2.band * 100)
+                    end as per_outbps 
+			from   tb_ifsendtraffic_history t1,
+			       (select distinct b.svc_no , b.sa_id, b.cust_name, b.nat_name, c.value1 as band 
+			        from tb_customerorder b, por_band c
+			        where b.sa_cd ='0730'
+			        and   b.line_spec_cd = c.code
+		]]>	
+		<choose>
+			<when test="search_llnum != null and search_llnum != ''">	
+					and  b.svc_no = trim(#{search_llnum})
+			</when>		
+		</choose>
+		<![CDATA[ 	
+			        ) t2
+			where t1.llnum = t2.svc_no						
+		 ]]>    
+		 <if test="search_from != null and search_from != ''">
+		    and collect_time BETWEEN #{search_from}||'0000'
+		                                               and    #{search_to}||'2359'
+		 </if>
+		 	 group by to_char(to_timestamp(t1.collect_time,'yyyymmddhh24mi'),'YYYY-MM-DD HH24:MI'),
+		              t2.cust_name,
+ 			          t2.nat_name ,
+ 			          t2.band
+ 			 order by to_char(to_timestamp(t1.collect_time,'yyyymmddhh24mi'),'YYYY-MM-DD HH24:MI')
+	</select>
+	
+	<select id="selectTrafficExcelHourList" parameterType="com.ktds.egov.vo.traffic.TrafficVo"	
+	resultType="com.ktds.egov.vo.traffic.TrafficVo">
+		<![CDATA[ 		
+ 			select  to_char(to_timestamp(t1.collect_time,'yyyymmddhh24mi'),'YYYY/MM/DD HH24') collect_time,
+ 			       t2.cust_name,
+ 			        t2.nat_name,
+ 			        t2.band,
+ 			        round( MAX(t1.inbps)/1024 ) inbps ,
+ 			        case 
+                    when t2.band is null then 0
+                    when t2.band = 0     then 0
+                    else
+                    round(round(MAX(t1.inbps)/1024) / t2.band * 100)
+                    end as per_inbps , 
+ 			        round( MAX(t1.outbps)/1024 ) outbps,
+ 			        case 
+                    when t2.band is null then 0
+                    when t2.band = 0     then 0
+                    else
+                    round(round(MAX(t1.outbps)/1024) / t2.band * 100)
+                    end as per_outbps 
+			from   tb_ifsendtraffic_history t1,
+			       (select distinct b.svc_no , b.sa_id, b.cust_name, b.nat_name, c.value1 as band 
+			        from tb_customerorder b, por_band c
+			        where b.sa_cd ='0730'
+			        and   b.line_spec_cd = c.code
+		]]>	
+		<choose>
+			<when test="search_llnum != null and search_llnum != ''">	
+					and svc_no = trim(#{search_llnum})
+			</when>			
+		</choose>
+		<![CDATA[ 	
+			        ) t2
+			where t1.llnum = t2.svc_no			
+		 ]]>   
+		 <if test="search_from != null and search_from != ''">
+		    and  collect_time BETWEEN #{search_from}||'0000'
+		                                               and    #{search_to}||'2359'
+		 </if>
+		 group by to_char(to_timestamp(t1.collect_time,'yyyymmddhh24mi'),'YYYY/MM/DD HH24'),
+		          t2.cust_name,
+ 			      t2.nat_name ,
+ 			      t2.band
+ 		 order by to_char(to_timestamp(t1.collect_time,'yyyymmddhh24mi'),'YYYY/MM/DD HH24')
+	</select>
+	
+	<select id="selectTrafficExcelDayList" parameterType="com.ktds.egov.vo.traffic.TrafficVo"	
+	resultType="com.ktds.egov.vo.traffic.TrafficVo">
+		<![CDATA[ 		
+ 			select  to_char(to_timestamp(t1.collect_time,'yyyymmddhh24mi'),'YYYY/MM/DD') collect_time,
+ 			        t2.cust_name,
+ 			        t2.nat_name,
+ 			        t2.band,
+ 			        round( MAX(t1.inbps)/1024 ) inbps ,
+ 			        case 
+                    when t2.band is null then 0
+                    when t2.band = 0     then 0
+                    else
+                    round(round(MAX(t1.inbps)/1024) / t2.band * 100)
+                    end as per_inbps ,                        
+ 			        round( MAX(t1.outbps)/1024 ) outbps,
+ 			        case 
+                    when t2.band is null then 0
+                    when t2.band = 0     then 0
+                    else
+                    round(round(MAX(t1.outbps)/1024) / t2.band * 100)
+                    end as per_outbps 
+			from   tb_ifsendtraffic_history t1,
+			       (select distinct b.svc_no , b.sa_id, b.cust_name, b.nat_name, c.value1 as band 
+			        from tb_customerorder b, por_band c
+			        where b.sa_cd ='0730'
+			        and   b.line_spec_cd = c.code
+		]]>	
+		<choose>
+			<when test="search_llnum != null and search_llnum != ''">	
+					and svc_no = trim(#{search_llnum})
+			</when>
+			<otherwise>
+					and nat_name = #{search_nat}
+			</otherwise>
+		</choose>
+		<![CDATA[ 	
+			        ) t2			        
+			where t1.llnum = t2.svc_no		
+		 ]]>   
+		 <if test="search_from != null and search_from != ''">
+		    and  collect_time BETWEEN #{search_from}||'0000'
+		                                               and    #{search_to}||'2359'
+		 </if>
+		 group by to_char(to_timestamp(t1.collect_time,'yyyymmddhh24mi'),'YYYY/MM/DD'),
+		          t2.cust_name,
+ 			      t2.nat_name,
+ 			      t2.band
+ 		order by to_char(to_timestamp(t1.collect_time,'yyyymmddhh24mi'),'YYYY/MM/DD')
+	</select>
+	
+		<select id="selectTrafficExcelMonthList" parameterType="com.ktds.egov.vo.traffic.TrafficVo"	
+	resultType="com.ktds.egov.vo.traffic.TrafficVo">
+		<![CDATA[ 		
+ 			select  to_char(to_timestamp(t1.collect_time,'yyyymmddhh24mi'),'YYYY/MM') collect_time,
+ 			          t2.cust_name,
+ 			        t2.nat_name,
+ 			        t2.band,
+ 			        round(MAX(t1.inbps)/1024 ) inbps ,
+ 			        case 
+                    when t2.band is null then 0
+                    when t2.band = 0     then 0
+                    else
+                    round(round(MAX(t1.inbps)/1024) / t2.band * 100)
+                    end as per_inbps ,                        
+ 			        round(MAX(t1.outbps)/1024 ) outbps,
+ 			        case 
+                    when t2.band is null then 0
+                    when t2.band = 0     then 0
+                    else
+                    round(round(MAX(t1.outbps)/1024) / t2.band * 100)
+                    end as per_outbps 
+			from   tb_ifsendtraffic_history t1,
+			       (select distinct b.svc_no , b.sa_id, b.cust_name, b.nat_name, c.value1 as band 
+			        from tb_customerorder b, por_band c
+			        where b.sa_cd ='0730'
+			        and   b.line_spec_cd = c.code
+		]]>	
+		<choose>
+			<when test="search_llnum != null and search_llnum != ''">	
+					and svc_no = trim(#{search_llnum})
+			</when>			
+		</choose>
+		<![CDATA[ 	
+			        ) t2
+			where t1.llnum = t2.svc_no				
+		 ]]>   
+		 <if test="search_from != null and search_from != ''">
+		 <![CDATA[ 	
+		    and  collect_time BETWEEN #{search_from}||'0000'
+		                                               and    #{search_to}||'2359'
+         ]]>   
+		 </if>
+		 <![CDATA[
+		 group by to_char(to_timestamp(t1.collect_time,'yyyymmddhh24mi'),'YYYY/MM'),
+		          t2.cust_name,
+ 			      t2.nat_name ,
+ 			      t2.band
+ 		 order by to_char(to_timestamp(t1.collect_time,'yyyymmddhh24mi'),'YYYY/MM')
+ 		 ]]>   	      
+	</select>
+	
+	<select id="selectAllLLnum" parameterType="String"	
+	resultType="com.ktds.egov.vo.traffic.TrafficVo"> 
+		<![CDATA[ 		
+			select  nvl(svc_no, 'null') as llnum
+			from    tb_customerorder
+			where   cust_id =  
+			   ( select max(cust_id) 
+			     from   tb_customerorder
+			     where  svc_no = #{search_llnum} )
+			and   sa_cd ='0730'
+			group by svc_no  
+		]]>		
+	</select>	
+	
+	<select id="selectAllNode" parameterType="String"	
+	resultType="com.ktds.egov.vo.traffic.TrafficVo"> 
+		<![CDATA[ 		
+			select  distinct  nealias, nescode
+			from  tb_egov_ne_nic_group
+		]]>		
+	</select>	
+	
+</mapper>

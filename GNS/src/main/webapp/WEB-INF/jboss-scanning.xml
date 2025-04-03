@@ -1,0 +1,5 @@
+<scanning xmlns="urn:jboss:scanning:1.0">
+  <path name="webapp/WEB-INF/classes">
+    <exclude name="**.**"/>
+  </path>
+</scanning>

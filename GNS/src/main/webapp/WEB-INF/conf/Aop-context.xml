@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+
+	xsi:schemaLocation="
+ 
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
+ 
+http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.0.xsd">
+
+
+
+	<!-- this is the object that will be proxied by Spring's AOP infrastructure 
+	<bean id="test" class="com.ktds.framework.core.aspect.Test" /> 
+	<aop:aspectj-autoproxy/>
+	-->
+	
+	<!-- this is the actual advice itself -->
+
+	<!-- <bean id="mannerAOP" class="com.ktds.framework.core.aspect.MannerAOP" 
+		/> -->
+
+     <!--
+	<aop:config>
+		<aop:pointcut id="serviceMethod"
+			expression="execution(* com.ktds.framework.core.aspect.Test.sayName(..))" />
+
+		<aop:aspect ref="exceptionTransfer">
+			<aop:after-throwing throwing="exception"
+				pointcut-ref="serviceMethod" method="transfer" />
+		</aop:aspect>
+	</aop:config>
+
+	<bean id="exceptionTransfer" class="com.ktds.framework.core.aspect.ExceptionTransfer"/>
+	-->
+</beans>
