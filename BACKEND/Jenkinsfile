@@ -1,0 +1,53 @@
+pipeline {   
+    agent {label 'docker-maven'}
+  
+	environment{
+     	//Environment setting		
+ 		NEXUS_URL = "https://nexus.dspace.kt.co.kr/repository/maven-snapshots"
+        VERSION = "0.0.1-SNAPSHOT"
+        NEXUS_REPOSITORY_ID = "maven-public"
+    }
+
+    stages {    
+    	stage('Check') {
+           steps { sh 'mvn --version' }
+        }
+         
+        stage('Build') {
+            steps {
+               withMaven(mavenSettingsConfig: 'Maven_csaiBackend_settings'){ // Maven Config 사용 옵션
+               	sh 'ls -al' // sh commands
+               	sh 'mvn clean package -DskipTests' //ApplicationTest 실행 제외
+               	sh 'pwd'
+               	sh 'ls -al ./target' // target 디렉토리 확인             	             	
+           	   }            
+           	}  
+        }
+
+        stage('Delivery') {
+            steps {
+               withMaven(mavenSettingsConfig: 'Maven_csaiBackend_settings'){
+              	sh 'ls -al'
+              	sh 'mvn -X deploy:deploy-file -DrepositoryId=${NEXUS_REPOSITORY_ID} -DpomFile=pom.xml -Dversion=${VERSION} -Dfile=./target/csai_backend.war -Durl=${NEXUS_URL}' 
+              }            
+            }
+        }
+        
+        //stage('Trigger CD'){
+    		//steps {
+    			//PRD
+    			//echo 'Hello PRD TEST'
+    			//sh "curl -v -k -X post https://ip-cd.dspace.kt.co.kr/job/GNS/job/SIT_GNS_DEPLOY1/build?token=prdgns_token1 --user 91346105:114f261efc696bcab2709bff9dcdcd6dda"
+        		//sh sleep 20s //20초 대기 
+        		//sh "curl -v -k -X post https://ip-cd.dspace.kt.co.kr/job/GNS/job/SIT_GNS_DEPLOY2/build?token=prdgns_token2 --user 91346105:114f261efc696bcab2709bff9dcdcd6dda"
+        		
+    			   
+    			//DEV    			
+    			//echo 'Hello DEV Trigger CD'    			
+        		//sh "curl -v -k -X post https://it-cd.dspace.kt.co.kr/job/GNS/job/SIT_GNS_DEPLOY/build?token=devgns_token --user 91346105:11980a7399eee6016d5c2a536996ff79b8"
+        		//echo 'Header Check'
+        		//sh "curl -v -i https://it-cd.dspace.kt.co.kr/job/GNS/job/SIT_GNS_DEPLOY/build?token=devgns_token --user 91346105:11980a7399eee6016d5c2a536996ff79b8"        		
+    		//}
+    	//}    	
+    }
+}

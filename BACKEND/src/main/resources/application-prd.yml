@@ -1,0 +1,79 @@
+ENV_UCC_POSTGRESQL: 10.220.179.101
+ENV_UCC_POSTGRESQL_PORT: 5432
+ENV_UCC_POSTGRESQL_DB: csaiprd
+
+ENV_CSAI_POSTGRESQL_SCHEMA: csai
+POSTGRESQL_USERNAME: ENC(5XjG3R/s4u7Abm/TwSjkwr0pRCmguXKEO3RexYerX38=)
+POSTGRESQL_PASSWORD: ENC(HhBycntGUedwXVSDfHcjvLz7L2pw4wOELgsWTJStW9szS5iOLjoMdA==)
+
+PROXY_DOMAIN: https://api.csai.kt.co.kr:8090
+#PROXY_DOMAIN: https://221.168.50.70:8090
+
+FILE:
+  CHAT: /home/tomcat/data/chat/
+  
+URL:
+  ALARM_TALK:
+    SEND: ${PROXY_DOMAIN}/alarm/send
+  CONSULT:
+    SEND: 
+      TEXT: ${PROXY_DOMAIN}/consult/send/text
+      IMAGE-BASE64: ${PROXY_DOMAIN}/consult/send/image/base64
+      IMAGE: ${PROXY_DOMAIN}/consult/send/image
+      MESSAGE: ${PROXY_DOMAIN}/consult/send/message
+      FILE: ${PROXY_DOMAIN}/consult/send/file  
+  OSB: ENC(iHzSPrtTvkDjp24zJBUkJ3fQw+JHMl1zOu6sMLhtC/9uy5M2/oPHyQ==)
+  WEB: https://csai.kt.co.kr:8080
+    
+LDAP:
+  CONN:
+    HOST: ENC(uxZ7JwJWJ0ho0OHETnSJCKbCkJwhqnbZWMdx5YjkZnM4ItCp4gQMgQ==)
+    SSLYN: true
+    PORT: ENC(837Nu3KyQ0x/NnrfvGgq65591X5YbMAbHi44p1lwAXc=)
+    BASEDN: OU=Employee,DC=ktldap,DC=ktad,DC=kt,DC=net
+    ID: ENC(HNmcla0xkVspvNW0Y1yUI1HHHuYnY4x9yDHRYoZi0ZhPUss/OIxMkxyGLbbCWHUI)
+    PWD: ENC(GAkuEzpzZWT+5eT/mdSt91Vq3Vu4ZaEA5mKgx9FjA3CzX+r1byuPObDJXDTrzDb3)
+
+server:
+  port: 8080
+  servlet:
+    session:
+      timeout: 1800
+
+# spring default
+spring:
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+        
+  main:
+    allow-bean-definition-overriding: true
+  jwt:
+    secret: ENC(Al9ZPDSDUi9sQAkNcnoD8RyXpcrnnGohayfVxPZhXuJSwRWcPP6NI3d+Ft+6wsweou6h0X2yIOqo5JwbaYhT6A==)
+#  profiles:
+#    active: local
+# JPA POSTGRESQL 파티션  처리 / 바인딩 # $
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://${ENV_UCC_POSTGRESQL}:${ENV_UCC_POSTGRESQL_PORT}/${ENV_UCC_POSTGRESQL_DB}?autoReconnect=true&currentSchema=${ENV_CSAI_POSTGRESQL_SCHEMA}
+    username: ${POSTGRESQL_USERNAME}
+    password: ${POSTGRESQL_PASSWORD}
+
+
+  h2:
+    console:
+      enabled: false
+      
+  jpa:
+    hibernate:
+      ddl-auto: none
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    properties:
+      hibernate:
+      
+#jasypt encryptor
+jasypt:
+  encryptor:
+    bean: jasyptStringEncrptor  

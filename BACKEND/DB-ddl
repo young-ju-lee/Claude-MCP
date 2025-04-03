@@ -1,0 +1,844 @@
+[ tb_ai_reslt ]
+-- Drop table
+
+-- DROP TABLE csai.tb_ai_reslt;
+
+CREATE TABLE csai.tb_ai_reslt (
+	tt_id varchar(16) NOT NULL,
+	lscn varchar(20) NULL,
+	go_yn varchar(2) NULL,
+	rcv_dt timestamp NOT NULL,
+	CONSTRAINT tb_ai_result_pkey PRIMARY KEY (tt_id, rcv_dt),
+	CONSTRAINT unique_tt_id UNIQUE (tt_id) INCLUDE (tt_id)
+);
+CREATE INDEX go_yn_idx ON csai.tb_ai_reslt USING btree (go_yn);
+
+[ tb_ai_reslt_guide ]
+-- Drop table
+
+-- DROP TABLE csai.tb_ai_reslt_guide;
+
+CREATE TABLE csai.tb_ai_reslt_guide (
+	scn varchar(20) NULL,
+	terml_type varchar(10) NULL,
+	guide1 varchar(50) NULL,
+	guide2 varchar(50) NULL,
+	guide3 varchar(50) NULL,
+	guide4 varchar(50) NULL,
+	guide5 varchar(50) NULL,
+	tt_id varchar(16) NULL,
+	seq_no int4 NULL,
+	guide6 varchar(50) NULL,
+	guide7 varchar(50) NULL,
+	guide8 varchar(50) NULL,
+	guide9 varchar(50) NULL,
+	guide10 varchar(50) NULL,
+	CONSTRAINT fk_tb_ai_reslt_tt_id FOREIGN KEY (tt_id) REFERENCES csai.tb_ai_reslt(tt_id)
+);
+CREATE INDEX fki_p ON csai.tb_ai_reslt_guide USING btree (tt_id);
+CREATE INDEX tt_id_idx ON csai.tb_ai_reslt_guide USING btree (tt_id);
+
+[ tb_ai_reslt_guide_hist ]
+-- Drop table
+
+-- DROP TABLE csai.tb_ai_reslt_guide_hist;
+
+CREATE TABLE csai.tb_ai_reslt_guide_hist (
+	scn varchar(20) NULL,
+	terml_type varchar(10) NULL,
+	guide1 varchar(50) NULL,
+	guide2 varchar(50) NULL,
+	guide3 varchar(50) NULL,
+	guide4 varchar(50) NULL,
+	guide5 varchar(50) NULL,
+	tt_id varchar(16) NULL,
+	seq_no int4 NULL,
+	guide6 varchar(50) NULL,
+	guide7 varchar(50) NULL,
+	guide8 varchar(50) NULL,
+	guide9 varchar(50) NULL,
+	guide10 varchar(50) NULL
+);
+CREATE INDEX tb_ai_reslt_guide_hist_tt_id_idx ON csai.tb_ai_reslt_guide_hist USING btree (tt_id);
+
+[ tb_ai_reslt_hist ]
+-- Drop table
+
+-- DROP TABLE csai.tb_ai_reslt_hist;
+
+CREATE TABLE csai.tb_ai_reslt_hist (
+	tt_id varchar(16) NOT NULL,
+	lscn varchar(20) NULL,
+	go_yn varchar(2) NULL,
+	rcv_dt timestamp NOT NULL,
+	CONSTRAINT tb_ai_reslt_hist_pkey PRIMARY KEY (tt_id, rcv_dt),
+	CONSTRAINT tb_ai_reslt_hist_tt_id_tt_id1_key UNIQUE (tt_id) INCLUDE (tt_id)
+);
+
+[ tb_alarmtalk_inspct ]
+-- Drop table
+
+-- DROP TABLE csai.tb_alarmtalk_inspct;
+
+CREATE TABLE csai.tb_alarmtalk_inspct (
+	tt_id varchar(4) NOT NULL,
+	user_nm varchar(20) NULL,
+	tel_nm varchar(11) NULL,
+	ispt_dt varchar(11) NULL,
+	work_order varchar(3) NULL,
+	coment varchar(100) NULL,
+	CONSTRAINT tb_alarmtalk_inspct_pkey PRIMARY KEY (tt_id)
+);
+
+[ tb_alarmtalk_send ]
+-- Drop table
+
+-- DROP TABLE csai.tb_alarmtalk_snd;
+
+CREATE TABLE csai.tb_alarmtalk_snd (
+	tt_id varchar(16) NOT NULL,
+	snd_dt timestamp NOT NULL,
+	snd_nm varchar(100) NULL,
+	snd_team varchar(100) NULL,
+	cust_nm varchar(100) NULL,
+	cust_tel_no varchar(20) NULL,
+	svc_main_cls_code varchar(4) NULL,
+	reporter_opinion varchar(255) NULL,
+	svc_main_cls_code_desc varchar(255) NULL,
+	troub_receipt_dt varchar(255) NULL,
+	snd_cmp_no varchar(255) NULL,
+	consult_id varchar(255) NULL,
+	receive_yn varchar(5) NULL,
+	CONSTRAINT pk_tb_alarmtalk_snd PRIMARY KEY (tt_id, snd_dt)
+);
+CREATE INDEX cust_nm_idx ON csai.tb_alarmtalk_snd USING btree (cust_nm);
+CREATE INDEX cust_tel_no_idx ON csai.tb_alarmtalk_snd USING btree (cust_tel_no);
+CREATE INDEX snd_cmp_no_idx ON csai.tb_alarmtalk_snd USING btree (snd_cmp_no);
+CREATE INDEX snd_dt_idx ON csai.tb_alarmtalk_snd USING btree (snd_dt);
+
+[ tb_alarmtalk_send_hist ]
+-- Drop table
+
+-- DROP TABLE csai.tb_alarmtalk_snd_hist;
+
+CREATE TABLE csai.tb_alarmtalk_snd_hist (
+	tt_id varchar(16) NOT NULL,
+	snd_dt timestamp NOT NULL,
+	snd_nm varchar(100) NULL,
+	snd_team varchar(100) NULL,
+	cust_nm varchar(100) NULL,
+	cust_tel_no varchar(20) NULL,
+	svc_main_cls_code varchar(4) NULL,
+	reporter_opinion varchar(255) NULL,
+	svc_main_cls_code_desc varchar(255) NULL,
+	troub_receipt_dt varchar(255) NULL,
+	snd_cmp_no varchar(255) NULL,
+	consult_id varchar(255) NULL,
+	receive_yn varchar(5) NULL,
+	CONSTRAINT tb_alarmtalk_snd_hist_pkey PRIMARY KEY (tt_id, snd_dt)
+);
+
+[ tb_auth ]
+-- Drop table
+
+-- DROP TABLE csai.tb_auth;
+
+CREATE TABLE csai.tb_auth (
+	emp_no varchar(255) NOT NULL,
+	refresh_token varchar(1000) NULL,
+	create_time timestamp NULL,
+	CONSTRAINT tb_auth_pkey PRIMARY KEY (emp_no)
+);
+CREATE INDEX emp_no_idx ON csai.tb_auth USING btree (emp_no);
+
+[ tb_chatroom ]
+-- Drop table
+
+-- DROP TABLE csai.tb_chat_room;
+
+CREATE TABLE csai.tb_chat_room (
+	uuid varchar(255) NOT NULL,
+	create_at timestamp NULL,
+	title varchar(255) NULL,
+	CONSTRAINT tb_chat_room_pkey PRIMARY KEY (uuid)
+);
+
+[ tb_consult ]
+-- Drop table
+
+-- DROP TABLE csai.tb_consult;
+
+CREATE TABLE csai.tb_consult (
+	id int8 NOT NULL,
+	consult_id varchar(255) NULL,
+	create_datetime timestamp NULL,
+	user_key varchar(255) NULL,
+	file_name varchar(255) NULL,
+	tel_num varchar(255) NULL,
+	cstt_nm varchar(100) NULL,
+	cstt_cmpno varchar(50) NULL,
+	lscn varchar(20) NULL,
+	cnvrst_sttus varchar(20) NULL,
+	last_guide_code varchar(10) NULL,
+	go_yn varchar(3) NULL,
+	tt_id varchar(16) NULL,
+	cust_nm varchar(100) NULL,
+	scn varchar(20) NULL,
+	rsv_time timestamp NULL,
+	go_reason varchar(1000) NULL,
+	CONSTRAINT tb_consult_pkey PRIMARY KEY (id)
+);
+CREATE INDEX consult_id_idx ON csai.tb_consult USING btree (consult_id);
+
+[ tb_consult_hist ]
+-- Drop table
+
+-- DROP TABLE csai.tb_consult_hist;
+
+CREATE TABLE csai.tb_consult_hist (
+	id int8 NOT NULL,
+	consult_id varchar(255) NULL,
+	create_datetime timestamp NULL,
+	user_key varchar(255) NULL,
+	file_name varchar(255) NULL,
+	tel_num varchar(255) NULL,
+	cstt_nm varchar(100) NULL,
+	cstt_cmpno varchar(50) NULL,
+	lscn varchar(20) NULL,
+	cnvrst_sttus varchar(20) NULL,
+	last_guide_code varchar(10) NULL,
+	go_yn varchar(3) NULL,
+	tt_id varchar(16) NULL,
+	cust_nm varchar(100) NULL,
+	scn varchar(20) NULL,
+	rsv_time timestamp NULL,
+	go_reason varchar(1000) NULL,
+	CONSTRAINT tb_consult_hist_pkey PRIMARY KEY (id)
+);
+
+[ tb_guide_class ]
+-- Drop table
+
+-- DROP TABLE csai.tb_guide_class;
+
+CREATE TABLE csai.tb_guide_class (
+	terml_type varchar(5) NULL,
+	guide_code varchar(50) NOT NULL,
+	guide_title varchar(50) NULL,
+	guide_desc varchar(1000) NULL,
+	guide_desc2 varchar(5000) NULL,
+	CONSTRAINT tb_guide_class_pkey PRIMARY KEY (guide_code)
+);
+
+[ tb_hdms_alarm ]
+-- Drop table
+
+-- DROP TABLE csai.tb_hdms_alarm;
+
+CREATE TABLE csai.tb_hdms_alarm (
+	macaddress varchar(20) NOT NULL,
+	eventdt timestamp NOT NULL,
+	receiptdt timestamp NOT NULL,
+	snddt timestamp NULL,
+	alarmcode varchar(10) NULL,
+	alarmname varchar(100) NULL,
+	alarmdescription varchar(1000) NULL,
+	CONSTRAINT pk_tb_hdms_alarm PRIMARY KEY (macaddress, eventdt, receiptdt)
+);
+
+[ tb_hdms_alarm_hist ]
+-- Drop table
+
+-- DROP TABLE csai.tb_hdms_alarm_hist;
+
+CREATE TABLE csai.tb_hdms_alarm_hist (
+	macaddress varchar(20) NOT NULL,
+	eventdt timestamp NOT NULL,
+	receiptdt timestamp NOT NULL,
+	snddt timestamp NULL,
+	alarmcode varchar(10) NULL,
+	alarmname varchar(100) NULL,
+	alarmdescription varchar(1000) NULL,
+	CONSTRAINT tb_hdms_alarm_hist_pkey PRIMARY KEY (macaddress, eventdt, receiptdt)
+);
+
+[ tb_hdms_dgrm ]
+-- Drop table
+
+-- DROP TABLE csai.tb_hdms_dgrm;
+
+CREATE TABLE csai.tb_hdms_dgrm (
+	ttid varchar(16) NOT NULL,
+	ip varchar(25) NOT NULL,
+	gw_ip varchar(25) NULL,
+	terml_type varchar(5) NULL,
+	dgrm_yn varchar(2) NULL,
+	seq varchar(3) NULL,
+	cret_dt timestamp NULL,
+	scn varchar(16) NOT NULL,
+	create_yn varchar(3) NULL,
+	CONSTRAINT tb_hdms_dgrm_pkey PRIMARY KEY (ttid, ip, scn)
+);
+CREATE INDEX create_yn ON csai.tb_hdms_dgrm USING btree (create_yn);
+CREATE INDEX ttid_idx ON csai.tb_hdms_dgrm USING btree (ttid);
+
+[ tb_hdms_dgrm_hist ]
+-- Drop table
+
+-- DROP TABLE csai.tb_hdms_dgrm_hist;
+
+CREATE TABLE csai.tb_hdms_dgrm_hist (
+	ttid varchar(16) NOT NULL,
+	ip varchar(25) NOT NULL,
+	gw_ip varchar(25) NULL,
+	terml_type varchar(5) NULL,
+	dgrm_yn varchar(2) NULL,
+	seq varchar(3) NULL,
+	cret_dt timestamp NULL,
+	scn varchar(16) NOT NULL,
+	create_yn varchar(3) NULL,
+	CONSTRAINT tb_hdms_dgrm_hist_pkey PRIMARY KEY (ttid, ip, scn)
+);
+
+[ tb_hdms_qos ]
+-- Drop table
+
+-- DROP TABLE csai.tb_hdms_qos;
+
+CREATE TABLE csai.tb_hdms_qos (
+	macaddress varchar(20) NOT NULL,
+	eventdt timestamp NOT NULL,
+	receiptdt timestamp NOT NULL,
+	snddt timestamp NULL,
+	rtplosscount varchar(20) NULL,
+	rtptotalcount varchar(20) NULL,
+	rtpdelayave varchar(20) NULL,
+	rtpjitter varchar(20) NULL,
+	CONSTRAINT pk_tb_hdms_qos PRIMARY KEY (macaddress, eventdt, receiptdt)
+);
+
+[ tb_hdms_qos_hist ]
+-- Drop table
+
+-- DROP TABLE csai.tb_hdms_qos_hist;
+
+CREATE TABLE csai.tb_hdms_qos_hist (
+	macaddress varchar(20) NOT NULL,
+	eventdt timestamp NOT NULL,
+	receiptdt timestamp NOT NULL,
+	snddt timestamp NULL,
+	rtplosscount varchar(20) NULL,
+	rtptotalcount varchar(20) NULL,
+	rtpdelayave varchar(20) NULL,
+	rtpjitter varchar(20) NULL,
+	CONSTRAINT tb_hdms_qos_hist_pkey PRIMARY KEY (macaddress, eventdt, receiptdt)
+);
+
+[ tb_hdms_reslt ]
+-- Drop table
+
+-- DROP TABLE csai.tb_hdms_reslt;
+
+CREATE TABLE csai.tb_hdms_reslt (
+	rcvdt timestamp NOT NULL,
+	scn varchar(20) NOT NULL,
+	ttid varchar(16) NOT NULL,
+	lscn varchar(20) NOT NULL,
+	terml_type varchar(2) NULL,
+	dag_reslt varchar(100) NULL,
+	inet_tie varchar(100) NULL,
+	profile varchar(100) NULL,
+	mac_rstrtn_num varchar(100) NULL,
+	port_sttus varchar(100) NULL,
+	host_num varchar(100) NULL,
+	updown_speed varchar(100) NULL,
+	crc_dag_reslt varchar(100) NULL,
+	traffic_dag_reslt varchar(100) NULL,
+	olt_ont_opti_dag_reslt varchar(100) NULL,
+	equip_alarm_dag_reslt varchar(100) NULL,
+	equip_syslog_dag_reslt varchar(100) NULL,
+	svc_sttus_dag_reslt varchar(100) NULL,
+	cpu_dag_reslt varchar(100) NULL,
+	wips_dag_reslt varchar(100) NULL,
+	wless_dag_reslt varchar(100) NULL,
+	low_terml_cnct_sttus_dag_reslt varchar(100) NULL,
+	tv_cnct_dag_reslt varchar(200) NULL,
+	wless_qat_dag_reslt varchar(100) NULL,
+	ap_updown_speed varchar(100) NULL,
+	ap_ping_reslt varchar(100) NULL,
+	ap_homehub_link_speed varchar(100) NULL,
+	ap_reslt_dt varchar(100) NULL,
+	dag_type varchar(100) NULL,
+	dag_dt varchar(100) NULL,
+	inet_prod_nm varchar(100) NULL,
+	svc_type varchar(100) NULL,
+	ip_mode varchar(100) NULL,
+	mac_address varchar(100) NULL,
+	model_nm varchar(50) NULL,
+	terml_ip varchar(50) NULL,
+	up_terml_ip varchar(50) NULL,
+	up_terml_model varchar(50) NULL,
+	ont_mac varchar(20) NULL,
+	ont_model varchar(50) NULL,
+	l2_terml_ip varchar(50) NULL,
+	modem_mac varchar(20) NULL,
+	modem_model varchar(50) NULL,
+	ai_snd_dt timestamp NULL,
+	ai_err_cd bpchar(2) NULL,
+	ai_err_msg bpchar(300) NULL,
+	dgrm_yn varchar(3) NULL,
+	cust_name varchar(100) NULL,
+	CONSTRAINT tb_hdms_reslt_pkey PRIMARY KEY (ttid, rcvdt, scn)
+);
+CREATE INDEX scn_idx ON csai.tb_hdms_reslt USING btree (scn);
+
+[ tb_hdms_reslt_hist ]
+-- Drop table
+
+-- DROP TABLE csai.tb_hdms_reslt_hist;
+
+CREATE TABLE csai.tb_hdms_reslt_hist (
+	rcvdt timestamp NOT NULL,
+	scn varchar(20) NOT NULL,
+	ttid varchar(16) NOT NULL,
+	lscn varchar(20) NOT NULL,
+	terml_type varchar(2) NULL,
+	dag_reslt varchar(100) NULL,
+	inet_tie varchar(100) NULL,
+	profile varchar(100) NULL,
+	mac_rstrtn_num varchar(100) NULL,
+	port_sttus varchar(100) NULL,
+	host_num varchar(100) NULL,
+	updown_speed varchar(100) NULL,
+	crc_dag_reslt varchar(100) NULL,
+	traffic_dag_reslt varchar(100) NULL,
+	olt_ont_opti_dag_reslt varchar(100) NULL,
+	equip_alarm_dag_reslt varchar(100) NULL,
+	equip_syslog_dag_reslt varchar(100) NULL,
+	svc_sttus_dag_reslt varchar(100) NULL,
+	cpu_dag_reslt varchar(100) NULL,
+	wips_dag_reslt varchar(100) NULL,
+	wless_dag_reslt varchar(100) NULL,
+	low_terml_cnct_sttus_dag_reslt varchar(100) NULL,
+	tv_cnct_dag_reslt varchar(200) NULL,
+	wless_qat_dag_reslt varchar(100) NULL,
+	ap_updown_speed varchar(100) NULL,
+	ap_ping_reslt varchar(100) NULL,
+	ap_homehub_link_speed varchar(100) NULL,
+	ap_reslt_dt varchar(100) NULL,
+	dag_type varchar(100) NULL,
+	dag_dt varchar(100) NULL,
+	inet_prod_nm varchar(100) NULL,
+	svc_type varchar(100) NULL,
+	ip_mode varchar(100) NULL,
+	mac_address varchar(100) NULL,
+	model_nm varchar(50) NULL,
+	terml_ip varchar(50) NULL,
+	up_terml_ip varchar(50) NULL,
+	up_terml_model varchar(50) NULL,
+	ont_mac varchar(20) NULL,
+	ont_model varchar(50) NULL,
+	l2_terml_ip varchar(50) NULL,
+	modem_mac varchar(20) NULL,
+	modem_model varchar(50) NULL,
+	ai_snd_dt timestamp NULL,
+	ai_err_cd bpchar(2) NULL,
+	ai_err_msg bpchar(300) NULL,
+	dgrm_yn varchar(3) NULL,
+	cust_name varchar(100) NULL,
+	CONSTRAINT tb_hdms_reslt_hist_pkey PRIMARY KEY (ttid, rcvdt, scn)
+);
+
+[ tb_hdms_rqst ]
+-- Drop table
+
+-- DROP TABLE csai.tb_hdms_rqst;
+
+CREATE TABLE csai.tb_hdms_rqst (
+	workodrtype varchar(4) NULL,
+	officescode varchar(6) NULL,
+	ttid varchar(16) NOT NULL,
+	rsvdt varchar(8) NULL,
+	troubreceiptdt timestamp NULL,
+	custname varchar(100) NULL,
+	lscn varchar(20) NULL,
+	svcmaintypecode varchar(4) NULL,
+	svcmainclscode varchar(4) NULL,
+	reportertelnum1 varchar(20) NULL,
+	reportertelnum2 varchar(20) NULL,
+	reporteropinion varchar(400) NULL,
+	hdms_snddt timestamp NULL,
+	CONSTRAINT pk_tb_hdms_rqst PRIMARY KEY (ttid)
+);
+
+[ tb_hdms_rqst_hist ]
+-- Drop table
+
+-- DROP TABLE csai.tb_hdms_rqst_hist;
+
+CREATE TABLE csai.tb_hdms_rqst_hist (
+	workodrtype varchar(4) NULL,
+	officescode varchar(6) NULL,
+	ttid varchar(16) NOT NULL,
+	rsvdt varchar(8) NULL,
+	troubreceiptdt timestamp NULL,
+	custname varchar(100) NULL,
+	lscn varchar(20) NULL,
+	svcmaintypecode varchar(4) NULL,
+	svcmainclscode varchar(4) NULL,
+	reportertelnum1 varchar(20) NULL,
+	reportertelnum2 varchar(20) NULL,
+	reporteropinion varchar(400) NULL,
+	hdms_snddt timestamp NULL,
+	troublereceiptdt timestamp NULL,
+	workodrtypecode varchar(4) NULL,
+	CONSTRAINT tb_hdms_rqst_hist_pkey PRIMARY KEY (ttid)
+);
+
+[ tb_hdms_rqst_office ]
+-- Drop table
+
+-- DROP TABLE csai.tb_hdms_rqst_office;
+
+CREATE TABLE csai.tb_hdms_rqst_office (
+	officescode varchar(10) NULL,
+	officesname varchar(30) NULL,
+	kts_division varchar(20) NULL
+);
+
+[ tb_necat ]
+-- Drop table
+
+-- DROP TABLE csai.tb_necat;
+
+CREATE TABLE csai.tb_necat (
+	necatseq int8 NOT NULL,
+	admmaker varchar(90) NULL,
+	admserial varchar(30) NULL,
+	certinum varchar(60) NULL,
+	changeid varchar(20) NULL,
+	companytypecode varchar(1) NOT NULL,
+	discardtermyn varchar(1) NULL,
+	format bytea NULL,
+	hdsaddsvctypecode varchar(2) NULL,
+	imgfilepath varchar(765) NULL,
+	inputdt timestamp NULL,
+	lgporttranslineyn varchar(1) NOT NULL,
+	looptypecode varchar(1) NULL,
+	mfrscode varchar(3) NOT NULL,
+	modelname varchar(150) NOT NULL,
+	modelnamescode varchar(18) NOT NULL,
+	modifydt timestamp NULL,
+	mtvlimit int8 NULL,
+	necatclscode varchar(8) NULL,
+	nemainclscode varchar(2) NOT NULL,
+	neshapecode varchar(1) NOT NULL,
+	nesubclscode varchar(2) NOT NULL,
+	pollingyn varchar(1) NOT NULL,
+	printord varchar(2) NULL,
+	qty int8 NOT NULL,
+	requserid varchar(20) NULL,
+	snmpcommtypecode varchar(1) NOT NULL,
+	stackyn varchar(1) NOT NULL,
+	status varchar(4) NULL,
+	subcrentalyn varchar(1) NOT NULL,
+	timeslotgroupyn varchar(1) NOT NULL,
+	workid varchar(20) NULL,
+	CONSTRAINT tb_necat_pkey PRIMARY KEY (necatseq)
+);
+
+[ tb_neclscode ]
+-- Drop table
+
+-- DROP TABLE csai.tb_neclscode;
+
+CREATE TABLE csai.tb_neclscode (
+	nemainclscode varchar(2) NOT NULL,
+	nesubclscode varchar(2) NOT NULL,
+	iconimgfilepath varchar(765) NULL,
+	maindescription varchar(60) NOT NULL,
+	rentalequiptypecode varchar(4) NULL,
+	subdescription varchar(120) NOT NULL,
+	svcmainclscode varchar(4) NULL,
+	CONSTRAINT tb_neclscode_pkey PRIMARY KEY (nemainclscode, nesubclscode)
+);
+
+[ tb_reservation ]
+-- Drop table
+
+-- DROP TABLE csai.tb_reservation;
+
+CREATE TABLE csai.tb_reservation (
+	status varchar(5) NULL,
+	rsv_time timestamp NULL,
+	id int8 NOT NULL,
+	tt_id varchar(16) NULL,
+	CONSTRAINT tb_reservation_pkey PRIMARY KEY (id)
+);
+
+[ tb_sa_tt_cmplt  ]
+-- Drop table
+
+-- DROP TABLE csai.tb_sa_tt_cmplt;
+
+CREATE TABLE csai.tb_sa_tt_cmplt (
+	tt_id varchar(16) NOT NULL,
+	action_type varchar(1) NULL,
+	as_cause_main_cls_code varchar(1) NULL,
+	as_cause_main_cls_code_desc varchar(50) NULL,
+	as_cause_sub_cls_code varchar(2) NULL,
+	as_cause_sub_cls_code_desc varchar(50) NULL,
+	as_equip_main_cls_code varchar(1) NULL,
+	as_equip_main_cls_code_desc varchar(50) NULL,
+	as_equip_sub_cls_code varchar(2) NULL,
+	as_equip_sub_cls_code_desc varchar(50) NULL,
+	as_fix_main_cls_code varchar(1) NULL,
+	as_fix_main_cls_code_desc varchar(50) NULL,
+	as_fix_sub_cls_code varchar(2) NULL,
+	as_fix_sub_cls_code_desc varchar(50) NULL,
+	cancel_yn varchar(1) NULL,
+	cur_work_step varchar(3) NULL,
+	cur_work_step_desc varchar(50) NULL,
+	cur_work_step_datetime varchar(20) NULL,
+	cust_name varchar(100) NULL,
+	first_rsv_wish_date varchar(8) NULL,
+	first_rsv_wish_time varchar(4) NULL,
+	lscn varchar(20) NULL,
+	offices_code varchar(6) NULL,
+	offices_code_desc varchar(50) NULL,
+	outdoor_type_code varchar(1) NULL,
+	outdoor_type_code_desc varchar(50) NULL,
+	rcv_date timestamp NULL,
+	repair_code varchar(3) NULL,
+	repair_code_desc varchar(50) NULL,
+	report_type_code varchar(1) NULL,
+	report_type_code_desc varchar(50) NULL,
+	reporter_opinion varchar(400) NULL,
+	reporter_tel_num1 varchar(20) NULL,
+	reporter_tel_num2 varchar(20) NULL,
+	rsv_dt varchar(8) NULL,
+	rsv_time varchar(4) NULL,
+	scn varchar(20) NULL,
+	svc_id varchar(20) NULL,
+	svc_main_cls_code varchar(4) NULL,
+	svc_main_cls_code_desc varchar(50) NULL,
+	svc_main_type_code varchar(4) NULL,
+	svc_main_type_code_desc varchar(50) NULL,
+	troub_cause varchar(4) NULL,
+	troub_cause_desc varchar(50) NULL,
+	troub_facility varchar(4) NULL,
+	troub_facility_desc varchar(50) NULL,
+	troub_receipt_dt varchar(20) NULL,
+	troub_receipt_type_code varchar(2) NULL,
+	troub_receipt_type_code_desc varchar(50) NULL,
+	work_content varchar(200) NULL,
+	work_finish_datetime varchar(23) NULL,
+	CONSTRAINT tb_sa_tt_cmplt_pkey PRIMARY KEY (tt_id)
+);
+CREATE INDEX idx_sa_tt_cmplt ON csai.tb_sa_tt_cmplt USING btree (tt_id);
+CREATE INDEX lscn_idx ON csai.tb_sa_tt_cmplt USING btree (lscn);
+
+[ tb_sa_tt_cmplt_hist ]
+-- Drop table
+
+-- DROP TABLE csai.tb_sa_tt_cmplt_hist;
+
+CREATE TABLE csai.tb_sa_tt_cmplt_hist (
+	tt_id varchar(16) NOT NULL,
+	action_type varchar(1) NULL,
+	as_cause_main_cls_code varchar(1) NULL,
+	as_cause_main_cls_code_desc varchar(50) NULL,
+	as_cause_sub_cls_code varchar(2) NULL,
+	as_cause_sub_cls_code_desc varchar(50) NULL,
+	as_equip_main_cls_code varchar(1) NULL,
+	as_equip_main_cls_code_desc varchar(50) NULL,
+	as_equip_sub_cls_code varchar(2) NULL,
+	as_equip_sub_cls_code_desc varchar(50) NULL,
+	as_fix_main_cls_code varchar(1) NULL,
+	as_fix_main_cls_code_desc varchar(50) NULL,
+	as_fix_sub_cls_code varchar(2) NULL,
+	as_fix_sub_cls_code_desc varchar(50) NULL,
+	cancel_yn varchar(1) NULL,
+	cur_work_step varchar(3) NULL,
+	cur_work_step_desc varchar(50) NULL,
+	cur_work_step_datetime varchar(20) NULL,
+	cust_name varchar(100) NULL,
+	first_rsv_wish_date varchar(8) NULL,
+	first_rsv_wish_time varchar(4) NULL,
+	lscn varchar(20) NULL,
+	offices_code varchar(6) NULL,
+	offices_code_desc varchar(50) NULL,
+	outdoor_type_code varchar(1) NULL,
+	outdoor_type_code_desc varchar(50) NULL,
+	rcv_date timestamp NULL,
+	repair_code varchar(3) NULL,
+	repair_code_desc varchar(50) NULL,
+	report_type_code varchar(1) NULL,
+	report_type_code_desc varchar(50) NULL,
+	reporter_opinion varchar(400) NULL,
+	reporter_tel_num1 varchar(20) NULL,
+	reporter_tel_num2 varchar(20) NULL,
+	rsv_dt varchar(8) NULL,
+	rsv_time varchar(4) NULL,
+	scn varchar(20) NULL,
+	svc_id varchar(20) NULL,
+	svc_main_cls_code varchar(4) NULL,
+	svc_main_cls_code_desc varchar(50) NULL,
+	svc_main_type_code varchar(4) NULL,
+	svc_main_type_code_desc varchar(50) NULL,
+	troub_cause varchar(4) NULL,
+	troub_cause_desc varchar(50) NULL,
+	troub_facility varchar(4) NULL,
+	troub_facility_desc varchar(50) NULL,
+	troub_receipt_dt varchar(20) NULL,
+	troub_receipt_type_code varchar(2) NULL,
+	troub_receipt_type_code_desc varchar(50) NULL,
+	work_content varchar(200) NULL,
+	work_finish_datetime varchar(23) NULL,
+	CONSTRAINT tb_sa_tt_cmplt_hist_pkey PRIMARY KEY (tt_id)
+);
+CREATE INDEX tb_sa_tt_cmplt_hist_tt_id_idx ON csai.tb_sa_tt_cmplt_hist USING btree (tt_id);
+
+[ tb_sa_tt_rcv ]
+-- Drop table
+
+-- DROP TABLE csai.tb_sa_tt_rcv;
+
+CREATE TABLE csai.tb_sa_tt_rcv (
+	tt_id varchar(16) NOT NULL,
+	action_type varchar(1) NULL,
+	as_cause_main_cls_code varchar(1) NULL,
+	as_cause_main_cls_code_desc varchar(50) NULL,
+	as_cause_sub_cls_code varchar(2) NULL,
+	as_cause_sub_cls_code_desc varchar(50) NULL,
+	as_equip_main_cls_code varchar(1) NULL,
+	as_equip_main_cls_code_desc varchar(50) NULL,
+	as_equip_sub_cls_code varchar(2) NULL,
+	as_equip_sub_cls_code_desc varchar(50) NULL,
+	as_fix_main_cls_code varchar(1) NULL,
+	as_fix_main_cls_code_desc varchar(50) NULL,
+	as_fix_sub_cls_code varchar(2) NULL,
+	as_fix_sub_cls_code_desc varchar(50) NULL,
+	cancel_yn varchar(1) NULL,
+	cur_work_step varchar(3) NULL,
+	cur_work_step_desc varchar(50) NULL,
+	cur_work_step_datetime varchar(20) NULL,
+	cust_name varchar(100) NULL,
+	first_rsv_wish_date varchar(8) NULL,
+	first_rsv_wish_time varchar(4) NULL,
+	lscn varchar(20) NULL,
+	offices_code varchar(6) NULL,
+	offices_code_desc varchar(50) NULL,
+	outdoor_type_code varchar(1) NULL,
+	outdoor_type_code_desc varchar(50) NULL,
+	rcv_date timestamp NULL,
+	repair_code varchar(3) NULL,
+	repair_code_desc varchar(50) NULL,
+	report_type_code varchar(1) NULL,
+	report_type_code_desc varchar(50) NULL,
+	reporter_opinion varchar(400) NULL,
+	reporter_tel_num1 varchar(20) NULL,
+	reporter_tel_num2 varchar(20) NULL,
+	rsv_dt varchar(8) NULL,
+	rsv_time varchar(4) NULL,
+	scn varchar(20) NULL,
+	svc_id varchar(20) NULL,
+	svc_main_cls_code varchar(4) NULL,
+	svc_main_cls_code_desc varchar(50) NULL,
+	svc_main_type_code varchar(4) NULL,
+	svc_main_type_code_desc varchar(50) NULL,
+	troub_cause varchar(4) NULL,
+	troub_cause_desc varchar(50) NULL,
+	troub_facility varchar(4) NULL,
+	troub_facility_desc varchar(50) NULL,
+	troub_receipt_dt varchar(20) NULL,
+	troub_receipt_type_code varchar(2) NULL,
+	troub_receipt_type_code_desc varchar(50) NULL,
+	work_content varchar(200) NULL,
+	work_finish_datetime varchar(23) NULL,
+	CONSTRAINT tb_sa_tt_rcv_pkey PRIMARY KEY (tt_id)
+);
+CREATE INDEX cust_name_idx ON csai.tb_sa_tt_rcv USING btree (cust_name);
+CREATE INDEX idx_sa_tt_rcv ON csai.tb_sa_tt_rcv USING btree (tt_id);
+CREATE INDEX svc_main_cls_code_idx ON csai.tb_sa_tt_rcv USING btree (svc_main_cls_code);
+
+[ tb_sa_tt_rcv_hist ]
+-- Drop table
+
+-- DROP TABLE csai.tb_sa_tt_rcv_hist;
+
+CREATE TABLE csai.tb_sa_tt_rcv_hist (
+	tt_id varchar(16) NOT NULL,
+	action_type varchar(1) NULL,
+	as_cause_main_cls_code varchar(1) NULL,
+	as_cause_main_cls_code_desc varchar(50) NULL,
+	as_cause_sub_cls_code varchar(2) NULL,
+	as_cause_sub_cls_code_desc varchar(50) NULL,
+	as_equip_main_cls_code varchar(1) NULL,
+	as_equip_main_cls_code_desc varchar(50) NULL,
+	as_equip_sub_cls_code varchar(2) NULL,
+	as_equip_sub_cls_code_desc varchar(50) NULL,
+	as_fix_main_cls_code varchar(1) NULL,
+	as_fix_main_cls_code_desc varchar(50) NULL,
+	as_fix_sub_cls_code varchar(2) NULL,
+	as_fix_sub_cls_code_desc varchar(50) NULL,
+	cancel_yn varchar(1) NULL,
+	cur_work_step varchar(3) NULL,
+	cur_work_step_desc varchar(50) NULL,
+	cur_work_step_datetime varchar(20) NULL,
+	cust_name varchar(100) NULL,
+	first_rsv_wish_date varchar(8) NULL,
+	first_rsv_wish_time varchar(4) NULL,
+	lscn varchar(20) NULL,
+	offices_code varchar(6) NULL,
+	offices_code_desc varchar(50) NULL,
+	outdoor_type_code varchar(1) NULL,
+	outdoor_type_code_desc varchar(50) NULL,
+	rcv_date timestamp NULL,
+	repair_code varchar(3) NULL,
+	repair_code_desc varchar(50) NULL,
+	report_type_code varchar(1) NULL,
+	report_type_code_desc varchar(50) NULL,
+	reporter_opinion varchar(400) NULL,
+	reporter_tel_num1 varchar(20) NULL,
+	reporter_tel_num2 varchar(20) NULL,
+	rsv_dt varchar(8) NULL,
+	rsv_time varchar(4) NULL,
+	scn varchar(20) NULL,
+	svc_id varchar(20) NULL,
+	svc_main_cls_code varchar(4) NULL,
+	svc_main_cls_code_desc varchar(50) NULL,
+	svc_main_type_code varchar(4) NULL,
+	svc_main_type_code_desc varchar(50) NULL,
+	troub_cause varchar(4) NULL,
+	troub_cause_desc varchar(50) NULL,
+	troub_facility varchar(4) NULL,
+	troub_facility_desc varchar(50) NULL,
+	troub_receipt_dt varchar(20) NULL,
+	troub_receipt_type_code varchar(2) NULL,
+	troub_receipt_type_code_desc varchar(50) NULL,
+	work_content varchar(200) NULL,
+	work_finish_datetime varchar(23) NULL,
+	CONSTRAINT tb_sa_tt_rcv_hist_pkey PRIMARY KEY (tt_id)
+);
+CREATE INDEX tb_sa_tt_rcv_hist_tt_id_idx ON csai.tb_sa_tt_rcv_hist USING btree (tt_id);
+
+[ tb_user_access ]
+-- Drop table
+
+-- DROP TABLE csai.tb_user_access;
+
+CREATE TABLE csai.tb_user_access (
+	id int8 NOT NULL,
+	service varchar(20) NULL,
+	operation varchar(128) NULL,
+	transaction_id varchar(50) NULL,
+	log_type varchar(10) NULL,
+	host_name varchar(128) NULL,
+	host_ip varchar(17) NULL,
+	user_id varchar(20) NULL,
+	user_ip varchar(17) NULL,
+	security_type varchar(20) NULL,
+	"timestamp" timestamp NULL,
+	CONSTRAINT tb_user_access_pkey PRIMARY KEY (id)
+);
