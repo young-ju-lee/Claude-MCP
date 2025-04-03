@@ -1,0 +1,23 @@
+stages:
+    - build
+
+variables:
+  NODE_VERSION: "18" ##NodeJS 버전
+  APP_NAME: csai_frontend
+  TARGET_DIR: target
+
+build_vue:
+    image: node:${NODE_VERSION}
+    stage: build
+    script:
+        - echo " Installing Dependencies "
+        - npm install ## 의존성 추가 
+        - echo " Building Vue Project "
+        - npm run build ## 프로젝트 빌드 
+        - echo " Packaging War file "
+        - mkdir -p ${TARGET_DIR}
+        - jar -cvf ${TARGET_DIR}/${APP_NAME}.war -C dist .
+    artifacts:
+        paths: 
+            - target/*.war ## 경로 설정
+        expire_in: 2 day ## 설정 일자 후 자동삭제

@@ -1,0 +1,10 @@
+{
+    "configurations": [
+        {
+            "type": "chrome",
+            "name": "https://dev.csai.kt.co.kr:8080/login",
+            "request": "launch",
+            "url": "https://dev.csai.kt.co.kr:8080/login"
+        }
+    ]
+}

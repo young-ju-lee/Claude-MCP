@@ -1,0 +1,75 @@
+pipeline {    
+    agent {label 'docker-maven'}
+	
+    environment{
+		//환경 변수 설정		
+ 		NEXUS_URL = "https://nexus.dspace.kt.co.kr/repository/maven-snapshots"
+        VERSION = "0.0.1-SNAPSHOT"
+        NEXUS_REPOSITORY_ID = "maven-public"
+
+		GITLAB_URL = "https://gitlab.dspace.kt.co.kr/CSAI/FRONT_END"
+		PROJECT_ID = "22427"
+		JOB_NAME = "build"
+		PRIVATE_TOKEN = "6k5H2uNrkZsUST5wzxxs"
+		WAR_FILE = "csai_frontend.zip"		
+		GROUP_ID = "com.kt"
+	    ARTIFACT_ID = "csai_frontend"
+	    PACKAGING = "zip"
+
+    }
+
+    stages {
+
+		stage(' Ckeck version') {
+            steps {
+               sh 'curl --version' 
+            }
+        }
+
+		stage(' Package to Jar') {
+            steps {
+			   sh 'ls -al'
+               sh '''
+					cd ./dist
+					zip -r ../${WAR_FILE} * .htaccess
+			      '''
+            }
+        }
+
+		stage('Delivery') {
+            steps {
+               withMaven(mavenSettingsConfig: 'Maven_csaiFront_settings'){
+              	sh 'ls -al'
+              	sh '''
+				echo " Deploying Jar to Nexus "
+				mvn -X deploy:deploy-file \
+					-DgroupId=${GROUP_ID} \
+					-DartifactId=${ARTIFACT_ID} \
+					-Dversion=${VERSION} \
+					-Dpackaging=${PACKAGING} \
+				    -DrepositoryId=${NEXUS_REPOSITORY_ID} \
+					-Dfile=${WAR_FILE} \
+					-Durl=${NEXUS_URL}
+				''' 
+              }  
+            }
+        }
+        
+        //stage('Trigger CD'){
+    		//steps {
+    			//PRD
+    			//echo 'Hello PRD TEST'
+    			//sh "curl -v -k -X post https://ip-cd.dspace.kt.co.kr/job/GNS/job/SIT_GNS_DEPLOY1/build?token=prdgns_token1 --user 91346105:114f261efc696bcab2709bff9dcdcd6dda"
+        		//sh sleep 20s //20초 대기 
+        		//sh "curl -v -k -X post https://ip-cd.dspace.kt.co.kr/job/GNS/job/SIT_GNS_DEPLOY2/build?token=prdgns_token2 --user 91346105:114f261efc696bcab2709bff9dcdcd6dda"
+        		
+    			   
+    			//DEV    			
+    			//echo 'Hello DEV Trigger CD'    			
+        		//sh "curl -v -k -X post https://it-cd.dspace.kt.co.kr/job/GNS/job/SIT_GNS_DEPLOY/build?token=devgns_token --user 91346105:11980a7399eee6016d5c2a536996ff79b8"
+        		//echo 'Header Check'
+        		//sh "curl -v -i https://it-cd.dspace.kt.co.kr/job/GNS/job/SIT_GNS_DEPLOY/build?token=devgns_token --user 91346105:11980a7399eee6016d5c2a536996ff79b8"        		
+    		//}
+    	//}    	
+    }
+}
