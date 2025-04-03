@@ -1,0 +1,42 @@
+CLIENT:
+  ID: ENC(RblAVOy1MY2PX/PNOTYsp/54+2m8z+A/+CqaAFpDVR8DPmmL+cXjVQ==)
+  PASSWORD: ENC(8/k+87e5iQdl+1WR/pvYUIsDZnNvzzBedEFx2zIoePkqba6a7unMBzL51BRo1gL6)
+  API_KEY: ENC(2LLCo3+knrCOUpLm/+17RUT6U/FQW2mjuzZupqSgGDlLGfAI6Qutl7Y7dxaTCslRhWDL1OTnNtrTgWsLg1RuGw==)
+
+CSAI_API_DOMAIN: https://ap.csai.kt.co.kr:8080/api
+
+IMAGE_DIR: /nas/
+
+URL:
+  KAKAO:
+    REQUEST_TOKEN: https://msggw-auth.supersms.co:9440/auth/v1/token
+    SEND_ALARMTALK: https://msggw.supersms.co:9443/v1/send/kko
+    SEND_MESSAGE: https://italk-api.ibizplus.co.kr:8443/rs/v1/@ktds_csai/chat_write2
+    IMAGE_UPLOAD: https://italk-api.ibizplus.co.kr:8443/rs/v1/@ktds_csai/image_upload
+    FILE_UPLOAD: https://italk-api.ibizplus.co.kr:8443/rs/v1/@ktds_csai/file_upload
+  KT_API:
+    REFERENCE: ${CSAI_API_DOMAIN}/consult/reference
+    MESSAGE: ${CSAI_API_DOMAIN}/consult/message
+    REPORT: ${CSAI_API_DOMAIN}/alarm/report
+    RESULT: ${CSAI_API_DOMAIN}/consult/result
+
+server:
+  port: 8090
+  servlet:
+    session:
+      timeout: 1800
+
+spring:
+  servlet:
+    multipart:
+      enabled: true
+      location: /home/tomcat/tmp
+      max-file-size: 10MB
+      max-request-size: 10MB
+  main:
+    allow-bean-definition-overriding: true
+        
+#jasypt encryptor
+jasypt:
+  encryptor:
+    bean: jasyptStringEncrptor  
