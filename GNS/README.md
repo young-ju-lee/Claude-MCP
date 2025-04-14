@@ -1,107 +1,85 @@
-# GNS 프로젝트 소스구조 및 아키텍처
+# GNS(Global Network Service) 프로젝트
 
-## 프로젝트 개요
-GNS(KT DS Framework)는 Spring 기반의 웹 애플리케이션 프로젝트로, Spring MVC 패턴을 활용한 웹 서비스를 제공합니다. Spring Security를 통한 인증 및 권한 관리와 MyBatis를 통한 데이터베이스 접근을 지원합니다.
+## 1. 개요
 
-## 기술 스택
-- **Java 1.6**
-- **Spring Framework 3.2.0.RELEASE**
-- **Spring Security 3.1.3.RELEASE**
-- **MyBatis 3.1.1**
-- **JSP/Servlet**
-- **PostgreSQL 및 Oracle DB 지원**
-- **JUnit 테스트 프레임워크**
-- **Maven 기반 빌드 시스템**
+GNS(Global Network Service) 프로젝트는 글로벌 네트워크 서비스를 위한 웹 애플리케이션입니다.
 
-## 프로젝트 구조
+## 2. 기술 스택
 
-### 폴더 구조
+- Java 1.6
+- Spring Framework 3.2.0
+- Spring Security 3.1.3
+- MyBatis 3.1.1
+- PostgreSQL 9.1
+- Maven
+
+## 3. 프로젝트 구성
+
 ```
 GNS/
-├── .classpath, .project, .settings/      # 이클립스 프로젝트 설정 파일
-├── Jenkinsfile                          # Jenkins CI/CD 파이프라인 설정
-├── lib/                                # 외부 라이브러리 파일 디렉토리
-├── pom.xml                             # Maven 프로젝트 설정 파일
-├── src/                                # 소스 코드
+├── db/                    # 데이터베이스 스크립트
+├── lib/                   # 라이브러리
+├── src/
 │   └── main/
-│       ├── java/                        # Java 소스 파일
-│       │   └── com/
-│       │       └── ktds/
-│       │           ├── egov/            # 전자정부 프레임워크 관련 소스
-│       │           └── framework/       # 프레임워크 핵심 소스
-│       ├── resources/                   # 리소스 파일
-│       │   ├── classes/                 # 클래스 리소스
-│       │   ├── conf/                    # 설정 파일
-│       │   ├── sqlMap/                  # MyBatis SQL 맵핑 파일
-│       │   ├── uml/                     # UML 다이어그램
-│       │   └── views/                   # 뷰 템플릿
-│       └── webapp/                      # 웹 애플리케이션 파일
-│           ├── WEB-INF/                 # 웹 애플리케이션 설정
-│           │   ├── conf/                # 웹 애플리케이션 설정 파일
-│           │   ├── jsp/                 # JSP 뷰 파일
-│           │   ├── lib/                 # 웹 애플리케이션 라이브러리
-│           │   ├── tld/                 # Tag Library Descriptor 파일
-│           │   └── web.xml              # 웹 애플리케이션 배포 설명자
-│           ├── css/                     # CSS 파일
-│           ├── js/                      # JavaScript 파일
-│           ├── images/                  # 이미지 파일
-│           └── index.html               # 기본 인덱스 페이지
-└── target/                             # 빌드 결과물
+│       ├── java/          # 자바 소스 코드
+│       ├── resources/     # 리소스 파일
+│       │   ├── classes/   # 클래스 관련 리소스
+│       │   ├── conf/      # 설정 파일
+│       │   ├── sqlMap/    # MyBatis SQL 매핑 파일
+│       │   ├── uml/       # UML 다이어그램
+│       │   └── views/     # 뷰 템플릿
+│       └── webapp/        # 웹 어플리케이션 파일
+└── target/                # 빌드 결과물
 ```
 
-## 아키텍처 개요
+## 4. 데이터베이스 설정
 
-### 레이어드 아키텍처
-GNS 프로젝트는 전형적인 3-계층 아키텍처를 따릅니다:
+### PostgreSQL 연결 정보
 
-1. **프레젠테이션 레이어**
-   - Controller 클래스 (MVC 패턴의 C)
-   - JSP 뷰 템플릿 (MVC 패턴의 V)
-   - HTML, CSS, JavaScript를 통한 프론트엔드 구현
+```properties
+jdbc.datasource=jdbc/DataSource
+jdbc.driverClass=org.postgresql.Driver
+jdbc.url=jdbc:postgresql://localhost:5432/postgres
+jdbc.username=postgres
+jdbc.password=dldudwn1!
+```
 
-2. **비즈니스 레이어**
-   - Service 인터페이스 및 구현체
-   - 비즈니스 로직 처리
-   - 트랜잭션 관리
+### 테이블 생성 방법
 
-3. **데이터 액세스 레이어**
-   - DAO (Data Access Object) 인터페이스 및 구현체
-   - MyBatis를 통한 SQL 매핑
-   - 데이터베이스 연동 로직
+1. `com.ktds.egov.util.PostgresTableCreator` 클래스를 실행하여 테이블을 생성할 수 있습니다.
 
-### Spring MVC 패턴
-- **DispatcherServlet**: 모든 HTTP 요청의 진입점
-- **Controller**: 요청 처리 및 모델 데이터 준비
-- **View Resolver**: 뷰 이름을 실제 JSP 파일로 매핑
-- **JSP 뷰**: 모델 데이터를 사용하여 HTML 응답 생성
+   ```bash
+   # 프로젝트 루트 디렉토리에서
+   cd GNS
+   mvn compile exec:java -Dexec.mainClass="com.ktds.egov.util.PostgresTableCreator"
+   ```
 
-### 보안 아키텍처
-- Spring Security를 사용하여 인증 및 권한 부여 관리
-- HTTP 요청에 대한 보안 필터 체인
-- 사용자 인증 및 세션 관리
+## 5. 주요 기능
 
-### 데이터 액세스
-- MyBatis를 사용한 객체-관계 매핑
-- XML 기반 SQL 매핑 파일
-- 데이터 액세스 객체(DAO) 패턴
+- 회원 관리
+- 팝업 관리
+- 통계
+- 관리자 페이지
 
-### 설정 관리
-- XML 기반 Spring 설정
-- 속성 파일을 통한 환경 설정
-- 개발, 테스트, 운영 환경 분리
+## 6. 설치 및 실행 방법
 
-## 빌드 및 배포
-프로젝트는 Maven을 사용하여 빌드되며, Jenkins CI/CD 파이프라인을 통해 배포됩니다. 최종 산출물은 WAR 파일로 생성되어 웹 서버(예: Apache Tomcat)에 배포됩니다.
+### 6.1 필수 요구사항
+
+- JDK 1.6 이상
+- Maven 3.x
+- PostgreSQL 9.1 이상
+
+### 6.2 프로젝트 빌드
 
 ```bash
-# 빌드 명령어
+cd GNS
 mvn clean package
 ```
 
-## 주요 설정 파일
-- **pom.xml**: Maven 프로젝트 설정 및 의존성 관리
-- **web.xml**: 웹 애플리케이션 설정
-- **applicationContext.xml**: Spring 애플리케이션 컨텍스트 설정
-- **servlet-context.xml**: Spring MVC 설정
-- **security-context.xml**: Spring Security 설정
-- **mybatis-config.xml**: MyBatis 설정
+### 6.3 애플리케이션 실행
+
+생성된 WAR 파일을 웹 애플리케이션 서버(Tomcat, JBoss 등)에 배포하여 실행합니다.
+
+## 7. 개발자
+
+- KT DS
